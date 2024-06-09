@@ -62,8 +62,18 @@ window.onload = () => {
   preloadAssets();
 
   contextBridge.exposeInMainWorld('api', {
-    saveText: (text: string) => {
-      ipcRenderer.send("saveText", text);
+    saveName: (name: string) => {
+      ipcRenderer.send('saveName', name);
+    },
+    saveLearningPath: (path: string) => {
+      ipcRenderer.send('saveLearningPath', path);
+    },
+    openFolder: () => ipcRenderer.invoke('dialog:openFolder'),
+    openFiles: () => ipcRenderer.invoke('dialog:openFiles'),
+    saveSourceFile: (sourceFileName: string, sourceFileFolder: string) => ipcRenderer.invoke("saveSourceFile", sourceFileName, sourceFileFolder),
+    getUserInfo: () => ipcRenderer.invoke('getUserInfo'),
+    generateMaterials: (sourceFileName: string, userPrompt: string = null, notesFilePath: string = null) => {
+      ipcRenderer.invoke('generateMaterials', sourceFileName, userPrompt, notesFilePath);
     }
   });
 

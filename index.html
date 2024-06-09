@@ -5,9 +5,92 @@
     <title>your story</title>
   </head>
   <body>
-    Enter your name.
-    <input type="text" id="name" />
-    Welcome.
-    <script type="module" src="/src/renderer.ts"></script>
+    <main>
+      <div id="home" class="section hidden">
+        <h2>learn for the long term</h2>
+        <p>
+          your name: 
+          <input type="text" id="your-name" />
+        </p>
+      </div>
+
+      <div id="home-2" class="section hidden">
+        <h2 id="home-2-header">it's a good day to learn</h2>
+        <p id="home-2-text">your flashcards are stored in the folder "<span id="home-2-folder-path"></span>"</p>
+        <p id="home-2-text">use Obsidian + spaced repetition plugin to edit and review the cards</p>
+        <span id="home-2-new">new: </span>
+        <span id="home-2-learn">learning: </span>
+        <span id="home-2-review">to review: </span>
+        <button id="start-review" onclick="location.href='review.html'">review</button>
+        <button id="add-materials">add materials</button>
+        <button id="update-folder">update folder path</button>
+        <!-- <a href="tasks.html">tasks</a> -->
+        <p id="home-2-error" class="hidden">hm...something happened. try again?</p>
+        <p id="home-2-update-status" class="hidden"></p>
+      </div>
+      
+      <div id="upload" class="section hidden">
+        <h2 id="upload-header">please upload a file with information that you'd like to remember for the long-term (1+ years).</h2>
+        <p id="upload-text">important: choose a resource that you feel is reputable and aligned with your values, since its concepts will stick to your brain.</p>
+        <p>
+          <!-- your pdf, md, txt, or doc:  -->
+          <button id="upload-files">add your .pdf, .md, .txt, or .doc</button>
+          <p id="upload-file-paths"></p>
+        </p>
+        <button 
+        class="hidden" id="upload-next">next</button>
+        <p class="hidden" id="upload-error">Please upload a valid file</p>
+      </div>
+
+
+      <div id="notes" class="section hidden">
+        <h2 id="notes-header">please share more about what you are trying to learn.</h2>
+        <p id="notes-text">why is this material interesting to you? what goals are you trying to achieve, if any? are there specific passages or concepts you want to focus on?</p>
+        <p>
+          <!-- your pdf, md, txt, or doc:  -->
+          <textarea id="notes-prompt" placeholder="describe"></textarea>
+          <button id="notes-files">add your .pdf, .md, .txt, or .doc</button>
+          <p id="notes-file-paths"></p>
+        </p>
+        <button id="notes-next">next</button>
+        <p class="hidden" id="notes-error">Please upload a valid file</p>
+      </div>
+
+      <div id="save-folder" class="section hidden">
+        <h2>choose a folder to store your generated learning materials.</h2>
+        <p>your source materials will be copied to the subfolder 'sources' within your specified folder.</p>
+        <p>if you use Obsidian, I'd recommend using a folder in your vault.</p>
+        <p>
+          <button id="save-folder-button">Choose folder</button>
+          <p id="save-folder-path"></p>
+        </p>
+        <button id="save-folder-next" class="hidden">next</button>
+        <p class="hidden" id="save-folder-error">Please select a valid folder</p>
+      </div>
+
+      <div id="generate" class="section hidden">
+        <h2>spitting bars...</h2>
+        <!-- <h2>generating materials...</h2> -->
+        <p id="generate-status">generating your flashcards!</p>
+        <p id="generate-result"></p>
+        <p>
+          <button class='back-home'>back home</button>
+        </p>
+      </div>
+
+      <!-- TODO: ADD A SECTION WHERE SOMEONE CAN EITHER SPEAK WHAT THEY'VE LEARNED OR THEY CAN ADD THEIR NOTES! -->
+
+      <div id="learn" class="section hidden">
+        <h2>generating materials...</h2>
+        <p>cool animation here</p>
+        <p>
+          
+        </p>
+      </div>
+      <div id="go-home">
+        <a href="index.html">home</a>
+      </div>
+    </main>
+    <script type="module" src="/src/renderer-index.ts"></script>
   </body>
   </html>

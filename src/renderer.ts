@@ -54,8 +54,6 @@ function startGame() {
   state.gameStage = DIALOGUE;
   showGameStage();
   showDialogue(1);
-
-  window.api.saveText("Hello world!!!!")
 }
 
 
