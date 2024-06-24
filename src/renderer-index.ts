@@ -1,25 +1,55 @@
 import './style.css';
 import $ from 'jquery';
-
-const SECTIONS: string[] = ['#home', '#home-2', '#upload', '#notes', '#save-folder', '#generate', '#learn'];
+import { getWikiTitle } from './lib/utils';
+// SECTIONS: '#home', '#home-2', '#upload', '#notes', '#save-folder', '#generate', '#learn'
 
 let name: string;
 let learningFolder: string;
-let sourceFileFolder: string = '';
-let sourceFileName: string = '';
+let sourceFileFolder: string | null = null;
+let sourceFileName: string | null = null;
 let userPrompt: string | null = null;
 let notesFilePath: string | null = null;
 // let sourceFilePaths: string[] = [];
+let wikiUrl: string | null = null;
+
+let currSection: string;
+const map = {
+  '#home': '#save-folder',
+  '#save-folder': '#upload',
+  '#home-2': '#upload',
+  '#upload': '#notes',
+  '#notes': '#generate'
+};
+let paths: string[] = [];
+let pathI = -1;
+
 
 function goToSection(section: string) {
-  SECTIONS.forEach((s) => {
-    if (s !== section && $(s).is(':visible')) {
-      $(s).addClass('hidden');
-    }
-  })
+  $(currSection).addClass('hidden');
   $(section).removeClass('hidden');
+  pathI++;
+  paths[pathI] = section;
+  paths = paths.slice(0, pathI + 1);
+  currSection = section;
 }
 
+function goBack() {
+  if (pathI > 0) {
+    $(currSection).addClass('hidden');
+    pathI--;
+    currSection = paths[pathI];
+    $(currSection).removeClass('hidden');
+  }
+}
+
+function goForward() {
+  if (paths.length > pathI + 1) {
+    $(currSection).addClass('hidden');
+    pathI++;
+    currSection = paths[pathI];
+    $(currSection).removeClass('hidden');
+  }
+}
 
 window.addEventListener('load', async () => {
   // @ts-ignore
@@ -28,7 +58,42 @@ window.addEventListener('load', async () => {
   if (userInfo.name) name = userInfo.name;
   if (userInfo.learningPath) learningFolder = userInfo.learningPath;
 
-  // goToSection('#notes');
+  // ~~~ Keyboard shortcuts ~~~
+  window.addEventListener('keydown', async (e) => {
+    const key = e.key;
+    console.log(`"${key}"`)
+    
+    if (key === 'Enter' && currSection==='#home-2') {
+      goToSection(map['#home-2']);
+    }
+
+    if (currSection==='#upload') {
+      if (key === 'v' && e.metaKey && !$('#wiki-url').is(':focus')) pasteWikiUrl();
+      if (key === 'Enter') {
+        if (e.metaKey) {
+          wikiUrl = $('#wiki-url').val() as string;
+          goToSection(map['#upload']);
+        } else {
+          $('#wiki-url').trigger('focus');
+        }
+      }
+    }
+    
+
+    if (key==='Enter' && currSection==='#notes') {
+      goToSection(map['#notes']);
+      loadGenerate();
+    }
+
+    if (key==='ArrowLeft' && e.metaKey) {
+      goBack();
+    }
+    if (key==='ArrowRight' && e.metaKey) {
+      goForward();
+    }
+  });
+
+  // ~~~ Navigate to Home or Home 2 ~~~
   if (userInfo.name && userInfo.learningPath) {
     goToSection('#home-2');
     $('#home-2-folder-path').text(userInfo.learningPath);
@@ -36,19 +101,22 @@ window.addEventListener('load', async () => {
     goToSection('#home');
   }
 
-  // Ask for name
+  // ~~~ Home Section for newcomers ~~~
   $('#your-name').on('keypress', (e) => {
     if (e.which === 13) {
       name = $('#your-name').val() as string;
       // @ts-ignore
       window.api.saveName(name);
       $('#upload-header').text(`hello ${name}. ${$('#upload-header').text()}`);
-      goToSection('#save-folder')
-      // goToSection('#upload');
+      goToSection(map['#home'])
     }
     $(this).attr("disabled", "disabled");
   });
 
+  // ~~~ Home 2 Section ~~~
+  $('#add-materials').on('click', () => { goToSection(map['#home-2'])});
+
+  // ~~~ Upload Section ~~~
   $('#upload-files').on('click', async () => {
     // @ts-ignore
     const filePaths = await window.api.openFiles();
@@ -70,10 +138,25 @@ window.addEventListener('load', async () => {
       //   sourceFilePaths.join('\n')
       // );
       $('#upload-next').removeClass("hidden");
-      
     }
   })
 
+  // Upload file
+  $('#upload-next').on('click', async () => {
+    // @ts-ignore
+    // const status = await window.api.saveSourceFile(sourceFileName, sourceFileFolder);
+    // console.log(status)
+    wikiUrl = $('#wiki-url').val() as string;
+    goToSection(map['#upload']);
+  });
+
+  const pasteWikiUrl = async () => {
+    const txt = await navigator.clipboard.readText();
+    if (txt) $('#wiki-url').val(txt);
+  }
+  $('#paste').on('click', pasteWikiUrl);
+
+  // ~~~ Notes Section ~~~
   $('#notes-files').on('click', async () => {
     // @ts-ignore
     const filePaths = await window.api.openFiles();
@@ -83,19 +166,23 @@ window.addEventListener('load', async () => {
       $('#notes-file-paths').text(notesFilePath);
     }
   });
-
-  $('#notes-next').on('click', async () => {
+  
+  const loadGenerate = async () => {
     try {
-      goToSection('#generate');
-      const flashcardPath = `${learningFolder}/flashcards/${sourceFileName.replace(/\.[^/.]+$/, "") + '.md'}`;
+      userPrompt = $('#notes-prompt').val() as string;
+      let flashcardPath;
+      let qaPairs;
+      if (sourceFileName) {
+        flashcardPath = `${learningFolder}/flashcards/${sourceFileName.replace(/\.[^/.]+$/, "") + '.md'}`;
+        // @ts-ignore
+        qaPairs = await window.api.generateMaterials(sourceFileName, userPrompt, notesFilePath);
+      } else { // wiki
+        const wikiTitle = getWikiTitle(wikiUrl);
+        flashcardPath = `${learningFolder}/flashcards/${wikiTitle}.md'}`;
+        // @ts-ignore
+        qaPairs = await window.api.generateMaterials(wikiUrl, userPrompt, notesFilePath, false);
+      }
       $('#generate-interims').text(`generating your flashcards! They'll appear at ${flashcardPath}`);
-
-      userPrompt = $('#notes-prompt').val();
-      console.log('generatinggg', sourceFileName, userPrompt, notesFilePath);
-
-      // @ts-ignore
-      const qaPairs: string = await window.api.generateMaterials(sourceFileName, userPrompt, notesFilePath);
-      
       // $('#generate-status').text(`success! flashcard is written at ${flashcardPath}`);
       $('#generate-result').text(qaPairs);
       
@@ -105,19 +192,18 @@ window.addEventListener('load', async () => {
       // });
     } catch(e) {
       $('#upload-error').removeClass('hidden');
+      console.error(e);
     }
 
+  };
+
+  $('#notes-next').on('click', async () => {
+    goToSection(map['#notes']);
+    await loadGenerate();
   });
 
-  // Upload file
-  $('#upload-next').on('click', async () => {
-    // @ts-ignore
-    const status = await window.api.saveSourceFile(sourceFileName, sourceFileFolder);
-    console.log(status)
-    
-    goToSection('#notes');
-  });
 
+  // ~~~ Update Folder Section ~~~
   $('#update-folder').on('click', async () => {
     try {
         // @ts-ignore
@@ -156,8 +242,7 @@ window.addEventListener('load', async () => {
     goToSection('#upload');
   });
 
-  $('#add-materials').on('click', () => { goToSection('#upload')});
-
+  // ~~~ Bottom Nav Section ~~~
   $('.back-home').on('click', () => { goToSection('#home-2') });
 
 });

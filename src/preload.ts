@@ -1,7 +1,7 @@
 // See the Electron documentation for details on how to use preload scripts:
 // https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
-
 const { contextBridge, ipcRenderer } = require('electron');
+import { Thought } from './lib/thoughtstream';
 
 const preloadAssets = () => {
   // Image assets
@@ -62,6 +62,7 @@ window.onload = () => {
   preloadAssets();
 
   contextBridge.exposeInMainWorld('api', {
+    // renderer-index
     saveName: (name: string) => {
       ipcRenderer.send('saveName', name);
     },
@@ -72,8 +73,14 @@ window.onload = () => {
     openFiles: () => ipcRenderer.invoke('dialog:openFiles'),
     saveSourceFile: (sourceFileName: string, sourceFileFolder: string) => ipcRenderer.invoke("saveSourceFile", sourceFileName, sourceFileFolder),
     getUserInfo: () => ipcRenderer.invoke('getUserInfo'),
-    generateMaterials: (sourceFileName: string, userPrompt: string = null, notesFilePath: string = null) => {
-      ipcRenderer.invoke('generateMaterials', sourceFileName, userPrompt, notesFilePath);
+    generateMaterials: (sourceFileName: string, userPrompt: string = null, notesFilePath: string = null, isFile: boolean = true) => {
+      ipcRenderer.invoke('generateMaterials', sourceFileName, userPrompt, notesFilePath, isFile);
+    },
+    sync: () => ipcRenderer.invoke('sync'),
+    
+    // renderer-convo
+    addThought: (t: Thought) => {
+      ipcRenderer.invoke('addThought', t);
     }
   });
 

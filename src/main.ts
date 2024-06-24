@@ -1,10 +1,23 @@
-import { app, BrowserWindow, dialog, ipcMain } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import { Document, VectorStoreIndex } from 'llamaindex';
 import { sendMessageToGemini } from './lib/gemini';
 import { srPrompt } from './lib/prompts';
 import { GetTextFromPDF } from './lib/utils';
+import { 
+  Card,
+  createEmptyCard,
+  generatorParameters,
+  FSRSParameters,
+  FSRS,
+  fsrs,
+  RecordLog,
+  Rating
+} from 'ts-fsrs';
+import { getWikiData } from './lib/wikipedia';
+import { getWikiTitle } from './lib/utils';
+import { Thought, ThoughtStream } from './lib/thoughtstream';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -16,11 +29,17 @@ const createWindow = () => {
   const mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
-    frame: false,
+    // frame: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
   });
+
+  // this opens all <a> links with target "_blank" in the browser.
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    shell.openExternal(url);
+    return { action: 'deny' };
+  })
 
   // and load the index.html of the app.
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
@@ -40,6 +59,7 @@ const createWindow = () => {
 // Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
   const win = createWindow();
+  let thoughtstream = new ThoughtStream();
 
   const userDataPath = path.join(app.getPath('userData'), 'user_data.json');
 
@@ -140,18 +160,32 @@ app.on('ready', async () => {
     return data;
   })
 
-  ipcMain.handle('generateMaterials', async (event, sourceFileName: string, userPrompt: string = null, notesFilePath: string = null) => {
+  const getFileText = async (sourceFileName: string) => {
+    const path = getLearningPath() + '/sources/' + sourceFileName;
+    let material: string;
+    if (sourceFileName.endsWith('.pdf')) {
+      // Process PDF file
+      material = await GetTextFromPDF(path);
+    } else if (sourceFileName.endsWith('.txt') || sourceFileName.endsWith('.md')) {
+      // Read text file or markdown file
+      material = await fs.promises.readFile(path, 'utf-8');
+    } else {
+      throw new Error('Unsupported file type');
+    }
+    return material;
+  }
+
+  ipcMain.handle('generateMaterials', async (event, path: string, userPrompt: string = null, notesFilePath: string = null, isFile: boolean = true) => {
     try {
-      const path = getLearningPath() + '/sources/' + sourceFileName;
-      let material: string;
-      if (sourceFileName.endsWith('.pdf')) {
-        // Process PDF file
-        material = await GetTextFromPDF(path);
-      } else if (sourceFileName.endsWith('.txt') || sourceFileName.endsWith('.md')) {
-        // Read text file or markdown file
-        material = await fs.promises.readFile(path, 'utf-8');
+      let material;
+      let flashcardFileName;
+      console.log('abacadabra', 'path', path, 'userprompt', userPrompt, 'notes', notesFilePath, 'isfile', isFile)
+      if (isFile) {
+        material = await getFileText(path);
+        flashcardFileName = path.replace(/\.[^/.]+$/, "") + '.md';
       } else {
-        throw new Error('Unsupported file type');
+        material = await getWikiData(path);
+        flashcardFileName = getWikiTitle(path) + '.md';
       }
 
       let notes: string | null = null;
@@ -182,7 +216,7 @@ app.on('ready', async () => {
       if (!fs.existsSync(flashcardPath)) {
         fs.mkdirSync(flashcardPath);
       }
-      const flashcardFileName = sourceFileName.replace(/\.[^/.]+$/, "") + '.md';
+      
       fs.writeFileSync(flashcardPath + '/' + flashcardFileName, qaPairs)
       return qaPairs;
        
@@ -190,6 +224,41 @@ app.on('ready', async () => {
       console.error(e);
     }
 
+  });
+
+  ipcMain.handle('sync', async (cards) => {
+
+    let card: Card = createEmptyCard();
+    const f: FSRS = new FSRS(); 
+    let scheduling_cards: RecordLog = f.repeat(card, new Date());
+
+    const good: RecordLogItem = scheduling_cards[Rating.Good];
+    const newCard: Card = good.card;
+
+    console.log(card)
+    console.log(f)
+    console.log(scheduling_cards)
+    console.log(good)
+    console.log(newCard)
+
+    return [
+      {
+        front: 'This is the front of card 1',
+        back: 'This is the back of card 1',
+        interval: 1,
+        ease: 250
+      },
+      {  
+        front: 'This is the front of card 2',
+        back: 'This is the back of card 2',
+        interval: 1,
+        ease: 250
+      }
+    ];
+  });
+
+  ipcMain.handle('addThought', (event, t: Thought) => {
+    thoughtstream.addThought(t);
   })
 });
 

@@ -51,20 +51,32 @@ a {
 }
 
 
-.section textarea {
+.section textarea, input {
   background: repeating-linear-gradient(to bottom, transparent, transparent 1px, white 1px, white 3px), repeating-linear-gradient(to right, #ccc, #ccc 1px, white 1px, white 3px);
   margin: 20px;
-  padding: 20px 20px 8px;
   font: inherit;
   cursor: pointer;
   border: 2px solid #333;
   box-shadow: 4px 4px #333;
   border-radius: 4px;
   transition: all 0.1s;
+  width: 600px;
 }
 
-.section textarea:focus {
+.section textarea {
+  padding: 20px 20px 8px;
+}
+
+.section input {
+  padding: 8px;
+}
+
+.section textarea:focus, input:focus {
   outline: none;
+}
+
+.section textarea:hover, input:hover {
+  cursor: text;
 }
 
 .section button, #source-material {
@@ -80,7 +92,8 @@ a {
 }
 
 .section button:hover,
-.section button:focus {
+.section button:focus
+{
   box-shadow: 2px 2px #333;
   margin: 22px 18px 18px 22px;
 }
@@ -129,3 +142,14 @@ a {
   border-radius: 100%;
 }
  */
+
+
+
+.shortcut {
+  border-radius: 5px; 
+  background-color: #fff; 
+  padding: 2px 6px; 
+  border: 1px solid black;
+  margin-right: 10px;
+  cursor: pointer;
+}

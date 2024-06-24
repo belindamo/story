@@ -16,20 +16,9 @@ window.addEventListener('load', () => {
   // // @ts-ignore
   // let cards = window.api.getReviewCards();
 
-  let cards = [
-    {
-      front: 'This is the front of card 1',
-      back: 'This is the back of card 1',
-      interval: 1,
-      ease: 250
-    },
-    {  
-      front: 'This is the front of card 2',
-      back: 'This is the back of card 2',
-      interval: 1,
-      ease: 250
-    }
-  ];
+  // @ts-ignore
+  let cards = window.api.sync();
+  
 
   function showCard() {
     let currentCard = cards[currentCardIndex];

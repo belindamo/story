@@ -6,60 +6,103 @@
   </head>
   <body>
     <main>
+      <!-- <script>
+        // Get the popup
+        var popup = document.getElementById("research-popup");
+
+        // Get the <span> element that closes the popup
+        var span = document.getElementsByClassName("close")[0];
+
+        // When the user clicks on <span> (x), close the popup
+        span.onclick = function() {
+          popup.style.display = "none";
+        }
+
+        // When the user clicks anywhere outside of the popup, close it
+        window.onclick = function(event) {
+          if (event.target == popup) {
+            popup.style.display = "none";
+          }
+        }
+      </script>
+
+
+      <div id="privacy" class="section">
+        <div id="research-popup" class="popup">
+          <div class="popup-content">
+            <span class="close">&times;</span>
+            <h3>Hey there!</h3>
+            <p>This was created as part of a research experiment. Would you be willing to share your cards and learning interactions with us? We'll anonymize everything and it'll help us create quantifiable results on how to best learn!</p>
+            <div class="popup-buttons">
+              <button id="no-thanks">No thanks</button>
+              <button id="share-data">Sure, I'll share!</button>
+            </div>
+          </div>
+        </div>
+      </div>
       <div id="home" class="section hidden">
         <h2>learn for the long term</h2>
         <p>
           your name: 
           <input type="text" id="your-name" />
         </p>
-      </div>
+      </div> -->
 
       <div id="home-2" class="section hidden">
         <h2 id="home-2-header">it's a good day to learn</h2>
-        <p id="home-2-text">your flashcards are stored in the folder "<span id="home-2-folder-path"></span>"</p>
-        <p id="home-2-text">use Obsidian + spaced repetition plugin to edit and review the cards</p>
-        <span id="home-2-new">new: </span>
-        <span id="home-2-learn">learning: </span>
-        <span id="home-2-review">to review: </span>
-        <button id="start-review" onclick="location.href='review.html'">review</button>
-        <button id="add-materials">add materials</button>
-        <button id="update-folder">update folder path</button>
+        <p id="home-2-text">your flashcards are stored in your local folder "<span id="home-2-folder-path"></span>"</p>
+        <p id="home-2-text">use Obsidian + spaced repetition plugin to review the cards</p>
+        <span id="home-2-new">
+          <!-- new:  -->
+        </span>
+        <span id="home-2-learn">
+          <!-- learning:  -->
+        </span>
+        <span id="home-2-review">
+          <!-- to review:  -->
+        </span>
+        <!-- <button id="start-review" onclick="location.href='review.html'">review</button> -->
+        <button id="add-materials"><i class="shortcut">↵</i>add materials</button>
         <!-- <a href="tasks.html">tasks</a> -->
         <p id="home-2-error" class="hidden">hm...something happened. try again?</p>
         <p id="home-2-update-status" class="hidden"></p>
       </div>
       
       <div id="upload" class="section hidden">
-        <h2 id="upload-header">please upload a file with information that you'd like to remember for the long-term (1+ years).</h2>
-        <p id="upload-text">important: choose a resource that you feel is reputable and aligned with your values, since its concepts will stick to your brain.</p>
+        <h2 id="upload-header">please upload a file with information that you'd like to remember for the long-term (1+ years)</h2>
+        <p id="upload-text">important: choose a resource that you feel is reputable and aligned with your values, since its concepts will stick to your brain</p>
         <p>
           <!-- your pdf, md, txt, or doc:  -->
           <button id="upload-files">add your .pdf, .md, .txt, or .doc</button>
+          <p>or <i class="shortcut" id="paste">⌘ v</i> a wikipedia url:</p>
+          <div style="display: flex;">
+            <input id='wiki-url' placeholder="https://en.wikipedia.org/wiki/Earth" />
+          </div>
           <p id="upload-file-paths"></p>
         </p>
-        <button 
-        class="hidden" id="upload-next">next</button>
+        <button id="upload-next"><i class="shortcut">⌘ ↵</i>next</button>
         <p class="hidden" id="upload-error">Please upload a valid file</p>
       </div>
 
 
       <div id="notes" class="section hidden">
-        <h2 id="notes-header">please share more about what you are trying to learn.</h2>
-        <p id="notes-text">why is this material interesting to you? what goals are you trying to achieve, if any? are there specific passages or concepts you want to focus on?</p>
+        <h2 id="notes-header">what would you like to remember?</h2>
+        <p id="notes-text">terms, concepts, sections · your  notes · personal motivations · interesting points · other additional context </p>
+        <!-- why is this material interesting to you? -->
         <p>
           <!-- your pdf, md, txt, or doc:  -->
           <textarea id="notes-prompt" placeholder="describe"></textarea>
-          <button id="notes-files">add your .pdf, .md, .txt, or .doc</button>
-          <p id="notes-file-paths"></p>
+          <!-- <button id="notes-files">add your .pdf, .md, .txt, or .doc</button> -->
+          <!-- <p id="notes-file-paths"></p> -->
         </p>
-        <button id="notes-next">next</button>
+        <button id="notes-next"><i class="shortcut">↵</i>next</button>
         <p class="hidden" id="notes-error">Please upload a valid file</p>
       </div>
 
       <div id="save-folder" class="section hidden">
-        <h2>choose a folder to store your generated learning materials.</h2>
-        <p>your source materials will be copied to the subfolder 'sources' within your specified folder.</p>
-        <p>if you use Obsidian, I'd recommend using a folder in your vault.</p>
+        <h2>choose a folder to store your generated learning materials</h2>
+        <p>your source materials will be copied to the subfolder 'sources' within your specified folder</p>
+        <p>if you use Obsidian, I'd recommend using a folder in your vault</p>
         <p>
           <button id="save-folder-button">Choose folder</button>
           <p id="save-folder-path"></p>
@@ -89,6 +132,15 @@
       </div>
       <div id="go-home">
         <a href="index.html">home</a>
+        ·
+        <a target="_blank" href="https://buymeacoffee.com/belindamo">cafe</a>
+        ·
+        <a id="update-folder" href="#">update folder path</a>
+        ·
+        <a href="convo.html">convo</a>
+        ·
+        <a href="swipe.html">swipe</a>
+        <!-- <a target="_blank" href="town.html">town</a> -->
       </div>
     </main>
     <script type="module" src="/src/renderer-index.ts"></script>

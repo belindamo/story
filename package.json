@@ -39,6 +39,7 @@
   "license": "MIT",
   "dependencies": {
     "@google/generative-ai": "^0.1.3",
+    "axios": "^1.7.2",
     "dotenv": "^16.4.5",
     "electron-squirrel-startup": "^1.0.1",
     "hume": "^0.6.4",
@@ -47,6 +48,7 @@
     "pdfjs-dist": "^4.3.136",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
-    "puppeteer-screen-recorder": "^3.0.3"
+    "puppeteer-screen-recorder": "^3.0.3",
+    "ts-fsrs": "^3.5.7"
   }
 }

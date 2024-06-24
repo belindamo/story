@@ -10,6 +10,7 @@ import {
   getBrowserSupportedMimeType,
   MimeType,
 } from 'hume';
+import { Thought, ThoughtStream } from './lib/thoughtstream';
 
 (async () => {
   const startBtn = document.querySelector<HTMLButtonElement>('button#start-btn');
@@ -18,6 +19,11 @@ import {
 
   startBtn?.addEventListener('click', connect);
   stopBtn?.addEventListener('click', disconnect);
+
+  /**
+   * Thought stream
+   */
+  let thoughtstream: ThoughtStream | null = null;
 
   /**
    * the Hume Client, includes methods for connecting to EVI and managing the Web Socket connection
@@ -83,6 +89,10 @@ import {
         clientSecret: 'naHvZahrt0qNsVaWXySXTXNZJASiLdd44z6Tk4ecTEAWVB3lT1wQAGOAh7kk6JLa',
       });
     }
+    
+    if (!thoughtstream) {
+      thoughtstream = new ThoughtStream();
+    }
 
     // instantiates WebSocket and establishes an authenticated connection
     socket = await client.empathicVoice.chat.connect({
@@ -95,6 +105,10 @@ import {
 
     // update ui state
     toggleBtnStates();
+
+    // adds "conversation started" message to the chat
+    appendMessage('system', 'Conversation started.');
+    window.api.addThought({ role: 'system', content: 'Conversation started.' } as Thought);
   }
 
   /**
@@ -123,6 +137,8 @@ import {
 
     // adds "conversation ended" message to the chat
     appendMessage('system', 'Conversation ended.');
+    window.api.addThought({ role: 'system', content: 'Conversation ended.' } as Thought);
+
   }
 
   /**
@@ -249,6 +265,8 @@ import {
         const { role, content } = message.message;
 
         appendMessage(role, content ?? '');
+        window.api.addThought({ role, content } as Thought)
+        
         break;
 
       // add received audio to the playback queue, and play next audio output

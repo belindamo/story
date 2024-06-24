@@ -10,3 +10,7 @@ export async function GetTextFromPDF(path: string): Promise<string> {
     return strings.join('\n');
 }
 
+
+export const getWikiTitle = (userUrl: string) => 
+    userUrl.split('/wiki/')[1].split(/[?/#]/)[0];
+  
