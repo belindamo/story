@@ -73,6 +73,7 @@ app.on('ready', async () => {
   let thoughtstream = new ThoughtStream();
 
   const userDataPath = path.join(app.getPath('userData'), 'user_data.json');
+  console.log(userDataPath);
 
   const saveUserData = (key: string, value: string) => {
     let data;

@@ -47,7 +47,7 @@ a {
 }
 
 
-.section textarea, .input-field {
+.section textarea, input[type="text"] {
   background: repeating-linear-gradient(to bottom, transparent, transparent 1px, white 1px, white 3px), repeating-linear-gradient(to right, #ccc, #ccc 1px, white 1px, white 3px);
   margin: 24px;
   font: inherit;
@@ -64,16 +64,19 @@ a {
   padding: 16px 16px 8px;
 }
 
-.input-field {
+input[type="text"] {
   padding: 8px;
 }
 
-.section textarea:focus, .input-field:focus {
+input:focus {
   outline: none; /* remove the default focus outline */
+}
+
+.section textarea:focus, input[type="text"]:focus {
   box-shadow: 2px 2px #333;
 }
 
-.section textarea:hover, .input-field:hover {
+.section textarea:hover, input[type="text"]:hover {
   cursor: text;
 }
 

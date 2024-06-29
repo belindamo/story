@@ -100,6 +100,7 @@ window.addEventListener('load', async () => {
     $('#home-2-folder-path').text(userInfo.learningPath);
   } else {
     goToSection('#home');
+    $('#your-name').trigger('focus');
   }
 
   // ~~~ Home Section for newcomers ~~~
@@ -108,7 +109,7 @@ window.addEventListener('load', async () => {
       name = $('#your-name').val() as string;
       // @ts-ignore
       window.api.saveName(name);
-      $('#upload-header').text(`hello ${name}. ${$('#upload-header').text()}`);
+      $('#upload-header').text(`hiya ${name}! ${$('#upload-header').text()}`);
       goToSection(map['#home'])
     }
     $(this).attr("disabled", "disabled");
