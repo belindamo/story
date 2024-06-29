@@ -96,7 +96,7 @@ window.addEventListener('load', async () => {
 
   // ~~~ Navigate to Home or Home 2 ~~~
   if (userInfo.name && userInfo.learningPath) {
-    goToSection('#generate');
+    goToSection('#home-2');
     $('#home-2-folder-path').text(userInfo.learningPath);
   } else {
     goToSection('#home');
@@ -177,21 +177,37 @@ window.addEventListener('load', async () => {
     userNotes = $(this).val() as string;
   });
 
-  
+  $('#notes-next').on('click', async () => {
+    goToSection(map['#notes']);
+    await loadGenerate();
+  });
+
+  // ~~~ Generate Section ~~~
+
+
   const loadGenerate = async () => {
     try {
       let flashcardPath;
       let qaPairs;
-      $('#generate-interims').text(`generating your flashcards! They'll appear at ${flashcardPath}`);
+      let animationInterval = setInterval(() => {
+        const dots = $('#generate-header').text().split('.').length;
+        if (dots > 3 || dots === 0) {
+          $('#generate-header').text('spitting bars');
+        } else {
+          $('#generate-header').text($('#generate-header').text() + '.');
+        }
+      }, 500);
+
+      $('#generate-status').text(`generating your flashcards! they'll appear at ${flashcardPath}`);
+      
       // @ts-ignore
       qaPairs = await window.api.generateMaterials(sources, userNotes, nCards);
-      // $('#generate-status').text(`success! flashcard is written at ${flashcardPath}`);
-      $('#generate-result').text(qaPairs);
       
-      //   (chunk: string) => {
-      //   response += chunk;
-      //   $('#generate-interims').text(response);
-      // });
+      clearInterval(animationInterval);
+      $('#generate-header').text('done!');
+      
+      $('#generate-status').text(`flashcard is written at ${flashcardPath}`);
+      $('#generate-interims').html(qaPairs.replace(/\n/g, '<br>'));
     } catch(e) {
       $('#upload-error').removeClass('hidden');
       console.error(e);
@@ -199,10 +215,10 @@ window.addEventListener('load', async () => {
 
   };
 
-  $('#notes-next').on('click', async () => {
-    goToSection(map['#notes']);
-    await loadGenerate();
-  });
+  $('.back-home').on('click', () => { goToSection('#home-2') });
+
+  $('.add-another-card').on('click', () => { goToSection('#upload') });
+
 
 
   // ~~~ Update Folder Section ~~~
@@ -244,7 +260,5 @@ window.addEventListener('load', async () => {
     goToSection('#upload');
   });
 
-  // ~~~ Bottom Nav Section ~~~
-  $('.back-home').on('click', () => { goToSection('#home-2') });
 
 });

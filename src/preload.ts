@@ -62,7 +62,7 @@ window.onload = () => {
   preloadAssets();
 
   contextBridge.exposeInMainWorld('api', {
-    // renderer-index
+    // index
     saveName: (name: string) => {
       ipcRenderer.send('saveName', name);
     },
@@ -73,12 +73,10 @@ window.onload = () => {
     openFiles: () => ipcRenderer.invoke('dialog:openFiles'),
     saveSources: (sources: string[]) => ipcRenderer.invoke("saveSources", sources),
     getUserInfo: () => ipcRenderer.invoke('getUserInfo'),
-    generateMaterials: (sources: string[], notes: string, nCards: number) => {
-      ipcRenderer.invoke('generateMaterials', sources, notes, nCards);
-    },
+    generateMaterials: (sources: string[], notes: string, nCards: number) => ipcRenderer.invoke('generateMaterials', sources, notes, nCards),
     sync: () => ipcRenderer.invoke('sync'),
     
-    // renderer-convo
+    // convo
     addThought: (t: Thought) => {
       ipcRenderer.invoke('addThought', t);
     }

@@ -108,6 +108,7 @@ import { Thought, ThoughtStream } from '../lib/thoughtstream';
 
     // adds "conversation started" message to the chat
     appendMessage('system', 'Conversation started.');
+    // @ts-ignore
     window.api.addThought({ role: 'system', content: 'Conversation started.' } as Thought);
   }
 
@@ -137,6 +138,7 @@ import { Thought, ThoughtStream } from '../lib/thoughtstream';
 
     // adds "conversation ended" message to the chat
     appendMessage('system', 'Conversation ended.');
+    // @ts-ignore
     window.api.addThought({ role: 'system', content: 'Conversation ended.' } as Thought);
 
   }
@@ -265,6 +267,7 @@ import { Thought, ThoughtStream } from '../lib/thoughtstream';
         const { role, content } = message.message;
 
         appendMessage(role, content ?? '');
+        // @ts-ignore
         window.api.addThought({ role, content } as Thought)
         
         break;

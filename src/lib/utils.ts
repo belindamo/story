@@ -66,4 +66,9 @@ export const getWikiData = async (userUrl: string) => {
 
 }
 
+export const getMetadata = (sources: string[]) => `---
+sources: [ ${sources.join(', ')} ]
+---
+
+`;
 

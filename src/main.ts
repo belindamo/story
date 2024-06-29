@@ -6,7 +6,7 @@ import fs from 'fs';
 import { Document, VectorStoreIndex } from 'llamaindex';
 import { sendMessageToGemini } from './lib/gemini';
 import { promptGenerateCards } from './lib/prompts';
-import { GetTextFromPDF } from './lib/utils';
+import { GetTextFromPDF, getMetadata } from './lib/utils';
 import { 
   Card,
   createEmptyCard,
@@ -207,9 +207,7 @@ app.on('ready', async () => {
         } else {
           targetFilename = getPathInfo(sources[0]).filename + '.md';
         }
-      } else {
-        targetFilename = 'placeholder aggregate name'; // TODO
-      }
+      } 
 
       const materials: PromiseSettledResult<string>[] = await Promise.allSettled(promises);
       const materialStrings = materials.map(result => {
@@ -222,21 +220,33 @@ app.on('ready', async () => {
       });
 
       const prompt = promptGenerateCards(targetFilename, materialStrings, notes, nCards);
-      console.log('PROMPT: ', prompt);
+      // console.log('PROMPT: ', prompt);
 
-      let qaPairs = '';
-      await sendMessageToGemini(prompt, (chunk: string) => {
-        console.log(chunk);
-        qaPairs += chunk;
-      });
+      const qaPairs = await sendMessageToGemini(prompt);
 
       const flashcardPath = getLearningPath() + '/flashcards'
       if (!fs.existsSync(flashcardPath)) {
         fs.mkdirSync(flashcardPath);
       }
+
+      if (sources.length > 1) {
+        targetFilename = await sendMessageToGemini(`Return a markdown filename ONLY based on context below.
+        Your example response 1: "Luis von Ahn.md"
+        Your example response 2: "Augmenting Long Term Memory.md"
+        Your example response 3: "How to Make Dalgona Coffee.md"
+        ---
+        Context: 
+        ${qaPairs}
+        ---
+        `);
+        targetFilename = targetFilename.trim().replace(/^[*_'\-"`?]+|[*_'\-"`?]+$/g, '');
+      }
+      const metadata = getMetadata(sources);
+      console.log('targetfilename', targetFilename)
+      console.log('meow', flashcardPath + '/' + targetFilename)
       
-      fs.writeFileSync(flashcardPath + '/' + targetFilename, qaPairs)
-      return qaPairs;
+      await fs.promises.writeFile(flashcardPath + '/' + targetFilename, metadata + qaPairs)
+      return targetFilename + '\n' + metadata + qaPairs;
        
     } catch(e) {
       console.error(e);
