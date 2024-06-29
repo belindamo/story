@@ -80,15 +80,21 @@ export function textInterval(interval: number): string {
         return "New";
     }
 
-    // TODO
     const days: number = Math.round(interval);
     const hours: number = Math.round(interval);
     const minutes: number = Math.round(interval * 525600);
 
-    const m: number = Math.round(interval / 3.04375) / 10;
-    const y: number = Math.round(interval / 36.525) / 10;
+    const months: number = Math.round(interval / 3.04375) / 10;
+    const years: number = Math.round(interval / 36.525) / 10;
 
-    if (m < 1.0) return `${interval} day(s)`;
-    else if (y < 1.0) return `${interval} month(s)`;
-    else return `${interval} year(s)`;
+    if (minutes <= 1) return `< 1 minute`;
+    if (minutes < 60) return `${minutes} minutes`;
+    else if (hours === 1) return `1 hour`;
+    else if (hours < 24) return `${hours} hours`;
+    else if (days === 1) return `1 day`;
+    else if (days < 30) return `${days} days`;
+    else if (months === 1.0) return `1 month`;
+    else if (years < 1.0) return `${months} months`;
+    else if (years === 1.0) return `1 year`;
+    else return `${years} years`;
 }
