@@ -1,9 +1,11 @@
 import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron';
+const { updateElectronApp } = require('update-electron-app');
+
 import path from 'path';
 import fs from 'fs';
 import { Document, VectorStoreIndex } from 'llamaindex';
 import { sendMessageToGemini } from './lib/gemini';
-import { srPrompt } from './lib/prompts';
+import { promptGenerateCards } from './lib/prompts';
 import { GetTextFromPDF } from './lib/utils';
 import { 
   Card,
@@ -15,29 +17,28 @@ import {
   RecordLog,
   Rating
 } from 'ts-fsrs';
-import { getWikiData } from './lib/wikipedia';
-import { getWikiTitle } from './lib/utils';
+import { getWikiTitle, getWikiData, getPathInfo } from './lib/utils';
 import { Thought, ThoughtStream } from './lib/thoughtstream';
+
+updateElectronApp(); // additional configuration options available
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
-const createWindow = () => {
+const createWindow = () => {  
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
-    minWidth: 800,
-    maxWidth: 800,
-    minHeight: 600,
-    maxHeight: 600,
+    show: false,
     // frame: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
   });
+  
 
   // this opens all <a> links with target "_blank" in the browser.
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
@@ -58,11 +59,17 @@ const createWindow = () => {
   return mainWindow;
 };
 
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
   const win = createWindow();
+  win.once('ready-to-show', () => {
+    win.webContents.setZoomFactor(0.8);
+    win.show();
+  })
+
   let thoughtstream = new ThoughtStream();
 
   const userDataPath = path.join(app.getPath('userData'), 'user_data.json');
@@ -129,25 +136,27 @@ app.on('ready', async () => {
     saveUserData('learningPath', path);
   });
 
-  ipcMain.handle('saveSourceFile', async (event, sourceFileName: string, sourceFileFolder: string) => {
+  ipcMain.handle('saveSources', async (event, sources: string[]) => {
     try {
-      const sourcesFolderPath = getLearningPath() + '/sources';
-      if (!fs.existsSync(sourcesFolderPath)) {
-        fs.mkdirSync(sourcesFolderPath);
+      const targetFolder = getLearningPath() + '/sources';
+      if (!fs.existsSync(targetFolder)) {
+        fs.mkdirSync(targetFolder);
       }
-      const source = sourceFileFolder + sourceFileName;
-      const target = sourcesFolderPath + '/' + sourceFileName;
-      await fs.promises.copyFile(
-        source, 
-        target,
-        fs.promises.constants.COPYFILE_EXCL,
-      )
-      .catch((err) => {
-        if (err) {
-          console.error(err)
-          return `error: ${err}`;
-        } 
-      });
+      let promises: Promise<void>[] = [];
+      sources.forEach((source) => {
+        if (!(getWikiTitle(source))) {
+          const { folder, filename } = getPathInfo(source);
+          const target = targetFolder + '/' + filename;
+          promises.push(fs.promises.copyFile(
+            source, 
+            target,
+            fs.constants.COPYFILE_FICLONE, // overwrites source file if it exists
+          ));
+        } else {
+          throw Error(`Invalid source filepath: ${source}`);
+        }
+      })
+      await Promise.all(promises);
       return 'success';
     } catch(e) {
       console.error(e);
@@ -164,13 +173,12 @@ app.on('ready', async () => {
     return data;
   })
 
-  const getFileText = async (sourceFileName: string) => {
-    const path = getLearningPath() + '/sources/' + sourceFileName;
+  const getFileText = async (path: string) => {
     let material: string;
-    if (sourceFileName.endsWith('.pdf')) {
+    if (path.endsWith('.pdf')) {
       // Process PDF file
       material = await GetTextFromPDF(path);
-    } else if (sourceFileName.endsWith('.txt') || sourceFileName.endsWith('.md')) {
+    } else if (path.endsWith('.txt') || path.endsWith('.md')) {
       // Read text file or markdown file
       material = await fs.promises.readFile(path, 'utf-8');
     } else {
@@ -179,36 +187,42 @@ app.on('ready', async () => {
     return material;
   }
 
-  ipcMain.handle('generateMaterials', async (event, path: string, userPrompt: string = null, notesFilePath: string = null, isFile: boolean = true) => {
+  ipcMain.handle('generateMaterials', async (event, sources: string[], notes: string, nCards: number) => {
     try {
-      let material;
-      let flashcardFileName;
-      console.log('abacadabra', 'path', path, 'userprompt', userPrompt, 'notes', notesFilePath, 'isfile', isFile)
-      if (isFile) {
-        material = await getFileText(path);
-        flashcardFileName = path.replace(/\.[^/.]+$/, "") + '.md';
-      } else {
-        material = await getWikiData(path);
-        flashcardFileName = getWikiTitle(path) + '.md';
-      }
-
-      let notes: string | null = null;
-      if (notesFilePath) {
-        if (notesFilePath.endsWith('.pdf')) {
-          // Process PDF file
-          notes = await GetTextFromPDF(notesFilePath);
-        } else if (notesFilePath.endsWith('.txt') || notesFilePath.endsWith('.md')) {
-          // Read text file or markdown file
-          notes = await fs.promises.readFile(notesFilePath, 'utf-8');
-        } else {
-          throw new Error('Unsupported file type');
+      let promises: Promise<string>[] = [];
+      sources.forEach((source) => {
+        const wikiTitle = getWikiTitle(source);
+        if (wikiTitle) { // wiki url
+          promises.push(getWikiData(source));
+        } 
+        if (getPathInfo(source)) { // local file
+          promises.push(getFileText(source));
         }
+      });
+
+      let targetFilename = '';
+      if (sources.length === 1) {
+        if (getWikiData(sources[0])) {
+          targetFilename = getWikiTitle(sources[0]) + '.md';
+        } else {
+          targetFilename = getPathInfo(sources[0]).filename + '.md';
+        }
+      } else {
+        targetFilename = 'placeholder aggregate name'; // TODO
       }
 
-      // console.log('material', material);
-      // console.log('notes', material);
-      const prompt = srPrompt(material, userPrompt, notes);
-      // console.log('PROMPT: ', prompt);
+      const materials: PromiseSettledResult<string>[] = await Promise.allSettled(promises);
+      const materialStrings = materials.map(result => {
+        if (result.status === 'fulfilled') {
+          return result.value;
+        } else {
+          console.error(`Error processing material: ${result.reason}`);
+          return '';
+        }
+      });
+
+      const prompt = promptGenerateCards(targetFilename, materialStrings, notes, nCards);
+      console.log('PROMPT: ', prompt);
 
       let qaPairs = '';
       await sendMessageToGemini(prompt, (chunk: string) => {
@@ -221,7 +235,7 @@ app.on('ready', async () => {
         fs.mkdirSync(flashcardPath);
       }
       
-      fs.writeFileSync(flashcardPath + '/' + flashcardFileName, qaPairs)
+      fs.writeFileSync(flashcardPath + '/' + targetFilename, qaPairs)
       return qaPairs;
        
     } catch(e) {
@@ -230,20 +244,20 @@ app.on('ready', async () => {
 
   });
 
-  ipcMain.handle('sync', async (cards) => {
+  ipcMain.handle('sync', (cards) => {
 
-    let card: Card = createEmptyCard();
-    const f: FSRS = new FSRS(); 
-    let scheduling_cards: RecordLog = f.repeat(card, new Date());
+    // let card: Card = createEmptyCard();
+    // const f: FSRS = new FSRS(); 
+    // let scheduling_cards: RecordLog = f.repeat(card, new Date());
 
-    const good: RecordLogItem = scheduling_cards[Rating.Good];
-    const newCard: Card = good.card;
+    // const good: RecordLogItem = scheduling_cards[Rating.Good];
+    // const newCard: Card = good.card;
 
-    console.log(card)
-    console.log(f)
-    console.log(scheduling_cards)
-    console.log(good)
-    console.log(newCard)
+    // console.log(card)
+    // console.log(f)
+    // console.log(scheduling_cards)
+    // console.log(good)
+    // console.log(newCard)
 
     return [
       {
@@ -264,6 +278,8 @@ app.on('ready', async () => {
   ipcMain.handle('addThought', (event, t: Thought) => {
     thoughtstream.addThought(t);
   })
+
+
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common

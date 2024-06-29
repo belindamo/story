@@ -1,17 +1,16 @@
 import './style.css';
 import $ from 'jquery';
 import { getWikiTitle } from './lib/utils';
-// SECTIONS: '#home', '#home-2', '#upload', '#notes', '#save-folder', '#generate', '#learn'
 
 let name: string;
 let learningFolder: string;
-let sourceFileFolder: string | null = null;
-let sourceFileName: string | null = null;
-let userPrompt: string | null = null;
-let notesFilePath: string | null = null;
-// let sourceFilePaths: string[] = [];
-let wikiUrl: string | null = null;
+let sources: string[] = []; // Array of original filepaths or urls
+let nCards = 8;
 
+let userNotes: string | null = null;
+let notesFilePath: string | null = null;
+
+/* ~~~~~ MAP ~~~~~ */
 let currSection: string;
 const map = {
   '#home': '#save-folder',
@@ -22,7 +21,6 @@ const map = {
 };
 let paths: string[] = [];
 let pathI = -1;
-
 
 function goToSection(section: string) {
   $(currSection).addClass('hidden');
@@ -68,17 +66,20 @@ window.addEventListener('load', async () => {
     }
 
     if (currSection==='#upload') {
-      if (key === 'v' && e.metaKey && !$('#wiki-url').is(':focus')) pasteWikiUrl();
-      if (key === 'Enter') {
-        if (e.metaKey) {
-          wikiUrl = $('#wiki-url').val() as string;
-          goToSection(map['#upload']);
-        } else {
-          $('#wiki-url').trigger('focus');
-        }
-      }
+      // if (key === 'v' && e.metaKey && !$('#wiki-url').is(':focus')) pasteWikiUrl();
+      // if (key === 'Enter') {
+      //   wikiUrl =  $('#wiki-url').val() as string;
+      //   if (getWikiTitle(wikiUrl) || !wikiUrl) {
+      //     addSources([wikiUrl]);
+      //     if (e.metaKey) {
+      //       goToSection(map['#upload']);
+      //     }
+      //   } else {
+      //     $('#upload-error').text('Please share a valid wiki link').removeClass('hidden');
+      //   }
+
+      // }
     }
-    
 
     if (key==='Enter' && currSection==='#notes') {
       goToSection(map['#notes']);
@@ -95,7 +96,7 @@ window.addEventListener('load', async () => {
 
   // ~~~ Navigate to Home or Home 2 ~~~
   if (userInfo.name && userInfo.learningPath) {
-    goToSection('#home-2');
+    goToSection('#generate');
     $('#home-2-folder-path').text(userInfo.learningPath);
   } else {
     goToSection('#home');
@@ -117,38 +118,38 @@ window.addEventListener('load', async () => {
   $('#add-materials').on('click', () => { goToSection(map['#home-2'])});
 
   // ~~~ Upload Section ~~~
+  const addSources = (newSources: string[]) => {
+    sources = [...new Set([...sources, ...newSources])];
+    if (sources.length > 0) {
+      $('#upload-file-paths').html(
+        '<ul>' +
+          sources.map(source => `<li>${source}</li>`).join('') +
+        '</ul>'  
+      );
+    }
+  }
+
+  const submitMaterials = async () => {
+    // @ts-ignore
+    const status = await window.api.saveSources(sources);
+    if (status !== 'success') throw Error(status);
+    const wikiUrl = $('#wiki-url').val() as string;
+    if (wikiUrl && getWikiTitle(wikiUrl)) sources.push(wikiUrl);
+    goToSection(map['#upload']);
+  }
+
+  // Add local files
   $('#upload-files').on('click', async () => {
     // @ts-ignore
     const filePaths = await window.api.openFiles();
     if (filePaths) {
-      let pathParts = filePaths[0].split(/[/\\]/);
-      sourceFileName = pathParts.pop();
-      sourceFileFolder = filePaths[0].substring(0, filePaths[0].lastIndexOf(sourceFileName));
-      console.log(sourceFileFolder, sourceFileName)
-      $('#upload-file-paths').text(
-        sourceFileFolder + sourceFileName
-      );
-      // source
-      // for (const path of filePaths) {
-        //   if (!sourceFilePaths.includes(path)) {
-          //     sourceFilePaths.push(path);
-      //   }
-      // }
-      // $('#upload-file-paths').text(
-      //   sourceFilePaths.join('\n')
-      // );
+      addSources(filePaths);
       $('#upload-next').removeClass("hidden");
     }
   })
 
   // Upload file
-  $('#upload-next').on('click', async () => {
-    // @ts-ignore
-    // const status = await window.api.saveSourceFile(sourceFileName, sourceFileFolder);
-    // console.log(status)
-    wikiUrl = $('#wiki-url').val() as string;
-    goToSection(map['#upload']);
-  });
+  $('#upload-next').on('click', submitMaterials);
 
   const pasteWikiUrl = async () => {
     const txt = await navigator.clipboard.readText();
@@ -166,23 +167,24 @@ window.addEventListener('load', async () => {
       $('#notes-file-paths').text(notesFilePath);
     }
   });
+
+  // Update number of cards when slider is released
+  $('#n-cards').on('change', function() {
+    const nCards = $(this).val() as number;
+  });
+
+  $('#notes-prompt').on('change', function() {
+    userNotes = $(this).val() as string;
+  });
+
   
   const loadGenerate = async () => {
     try {
-      userPrompt = $('#notes-prompt').val() as string;
       let flashcardPath;
       let qaPairs;
-      if (sourceFileName) {
-        flashcardPath = `${learningFolder}/flashcards/${sourceFileName.replace(/\.[^/.]+$/, "") + '.md'}`;
-        // @ts-ignore
-        qaPairs = await window.api.generateMaterials(sourceFileName, userPrompt, notesFilePath);
-      } else { // wiki
-        const wikiTitle = getWikiTitle(wikiUrl);
-        flashcardPath = `${learningFolder}/flashcards/${wikiTitle}.md'}`;
-        // @ts-ignore
-        qaPairs = await window.api.generateMaterials(wikiUrl, userPrompt, notesFilePath, false);
-      }
       $('#generate-interims').text(`generating your flashcards! They'll appear at ${flashcardPath}`);
+      // @ts-ignore
+      qaPairs = await window.api.generateMaterials(sources, userNotes, nCards);
       // $('#generate-status').text(`success! flashcard is written at ${flashcardPath}`);
       $('#generate-result').text(qaPairs);
       

@@ -71,10 +71,10 @@ window.onload = () => {
     },
     openFolder: () => ipcRenderer.invoke('dialog:openFolder'),
     openFiles: () => ipcRenderer.invoke('dialog:openFiles'),
-    saveSourceFile: (sourceFileName: string, sourceFileFolder: string) => ipcRenderer.invoke("saveSourceFile", sourceFileName, sourceFileFolder),
+    saveSources: (sources: string[]) => ipcRenderer.invoke("saveSources", sources),
     getUserInfo: () => ipcRenderer.invoke('getUserInfo'),
-    generateMaterials: (sourceFileName: string, userPrompt: string = null, notesFilePath: string = null, isFile: boolean = true) => {
-      ipcRenderer.invoke('generateMaterials', sourceFileName, userPrompt, notesFilePath, isFile);
+    generateMaterials: (sources: string[], notes: string, nCards: number) => {
+      ipcRenderer.invoke('generateMaterials', sources, notes, nCards);
     },
     sync: () => ipcRenderer.invoke('sync'),
     

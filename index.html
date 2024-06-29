@@ -48,6 +48,7 @@
         </p>
       </div> -->
 
+      <!-- HOME 1 -->
       <div id="home-2" class="section hidden">
         <h2 id="home-2-header">it's a good day to learn</h2>
         <p id="home-2-text">your flashcards are stored in your local folder "<span id="home-2-folder-path"></span>"</p>
@@ -68,37 +69,43 @@
         <p id="home-2-update-status" class="hidden"></p>
       </div>
       
+      <!-- UPLOAD -->
       <div id="upload" class="section hidden">
         <h2 id="upload-header">please upload a file with information that you'd like to remember for the long-term (1+ years)</h2>
         <p id="upload-text">important: choose a resource that you feel is reputable and aligned with your values, since its concepts will stick to your brain</p>
+        <div id="upload-file-paths"></div>
         <p>
           <!-- your pdf, md, txt, or doc:  -->
           <button id="upload-files">add your .pdf, .md, .txt, or .doc</button>
           <p>or <i class="shortcut" id="paste">⌘ v</i> a wikipedia url:</p>
           <div style="display: flex;">
-            <input id='wiki-url' placeholder="https://en.wikipedia.org/wiki/Earth" />
+            <input id='wiki-url' class='input-field' placeholder="https://en.wikipedia.org/wiki/Earth" />
           </div>
-          <p id="upload-file-paths"></p>
         </p>
         <button id="upload-next"><i class="shortcut">⌘ ↵</i>next</button>
         <p class="hidden" id="upload-error">Please upload a valid file</p>
       </div>
 
-
+      <!-- NOTES -->
       <div id="notes" class="section hidden">
-        <h2 id="notes-header">what would you like to remember?</h2>
+        <h2 id="notes-header">what do you want to remember?</h2>
         <p id="notes-text">terms, concepts, sections · your  notes · personal motivations · interesting points · other additional context </p>
         <!-- why is this material interesting to you? -->
         <p>
           <!-- your pdf, md, txt, or doc:  -->
           <textarea id="notes-prompt" placeholder="describe"></textarea>
-          <!-- <button id="notes-files">add your .pdf, .md, .txt, or .doc</button> -->
+          <div>
+            <p>Number of flashcards (vibe it out):</p>
+            <input type="range" id="n-cards" min="1" max="48" value="8">
+          <!-- <button id="notes-files">add your .pdf, .md, .txt, or .doc context files</button> -->
           <!-- <p id="notes-file-paths"></p> -->
+          </div>
         </p>
         <button id="notes-next"><i class="shortcut">↵</i>next</button>
         <p class="hidden" id="notes-error">Please upload a valid file</p>
       </div>
 
+      <!-- SAVE FOLDER -->
       <div id="save-folder" class="section hidden">
         <h2>choose a folder to store your generated learning materials</h2>
         <p>your source materials will be copied to the subfolder 'sources' within your specified folder</p>
@@ -111,6 +118,7 @@
         <p class="hidden" id="save-folder-error">Please select a valid folder</p>
       </div>
 
+      <!-- GENERATE -->
       <div id="generate" class="section hidden">
         <h2>spitting bars...</h2>
         <!-- <h2>generating materials...</h2> -->
@@ -121,15 +129,6 @@
         </p>
       </div>
 
-      <!-- TODO: ADD A SECTION WHERE SOMEONE CAN EITHER SPEAK WHAT THEY'VE LEARNED OR THEY CAN ADD THEIR NOTES! -->
-
-      <div id="learn" class="section hidden">
-        <h2>generating materials...</h2>
-        <p>cool animation here</p>
-        <p>
-          
-        </p>
-      </div>
       <div id="go-home">
         <a href="index.html">home</a>
         ·
@@ -138,8 +137,9 @@
         <a id="update-folder" href="#">update folder path</a>
         ·
         <a href="convo.html">convo</a>
-        ·
-        <a href="swipe.html">swipe</a>
+        <!-- · -->
+        <!-- <a href="review.html">review</a> -->
+        <!-- <a href="swipe.html">swipe</a> -->
         <!-- <a target="_blank" href="town.html">town</a> -->
       </div>
     </main>
