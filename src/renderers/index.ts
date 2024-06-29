@@ -189,7 +189,6 @@ window.addEventListener('load', async () => {
   const loadGenerate = async () => {
     try {
       let flashcardPath;
-      let qaPairs;
       let animationInterval = setInterval(() => {
         const dots = $('#generate-header').text().split('.').length;
         if (dots > 3 || dots === 0) {
@@ -199,16 +198,16 @@ window.addEventListener('load', async () => {
         }
       }, 500);
 
-      $('#generate-status').text(`generating your flashcards! they'll appear at ${flashcardPath}`);
+      $('#generate-status').text(`generating your flashcards! they'll appear in ${learningFolder}/flashcards`);
       
       // @ts-ignore
-      qaPairs = await window.api.generateMaterials(sources, userNotes, nCards);
+      const { filename, metadata, qaPairs } = await window.api.generateMaterials(sources, userNotes, nCards);
       
       clearInterval(animationInterval);
       $('#generate-header').text('done!');
       
-      $('#generate-status').text(`flashcard is written at ${flashcardPath}`);
-      $('#generate-interims').html(qaPairs.replace(/\n/g, '<br>'));
+      $('#generate-status').text(`flashcard is written at ${filename}`);
+      $('#generate-interims').html(`${filename}\n${metadata}\n${qaPairs}`.replace(/\n/g, '<br>'));
     } catch(e) {
       $('#upload-error').removeClass('hidden');
       console.error(e);

@@ -247,7 +247,7 @@ app.on('ready', async () => {
       console.log('meow', flashcardPath + '/' + targetFilename)
       
       await fs.promises.writeFile(flashcardPath + '/' + targetFilename, metadata + qaPairs)
-      return targetFilename + '\n' + metadata + qaPairs;
+      return { filename: targetFilename, metadata, qaPairs };
        
     } catch(e) {
       console.error(e);
