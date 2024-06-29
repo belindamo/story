@@ -4,7 +4,7 @@ import $ from 'jquery';
 import { schedule, ReviewResponse, textInterval } from './lib/scheduler';
 import { DEFAULT_SETTINGS } from './lib/settings';
 
-window.addEventListener('load', () => {
+window.addEventListener('load', async () => {
   document.addEventListener('keydown', (event) => {
     if (event.key === ' ') {
       $('#card-separator').removeClass('hidden');
@@ -13,12 +13,9 @@ window.addEventListener('load', () => {
   });
 
   let currentCardIndex = 0;
-  // // @ts-ignore
-  // let cards = window.api.getReviewCards();
 
   // @ts-ignore
-  let cards = window.api.sync();
-  
+  let cards = await window.api.sync();  
 
   function showCard() {
     let currentCard = cards[currentCardIndex];
@@ -30,11 +27,7 @@ window.addEventListener('load', () => {
 
   function updateIntervalDisplay(interval: number) {
     $('#response div p').each((i, el) => {
-      let text = $(el).text();
-      if (text.includes('d')) {
-        let days = parseInt(text);
-        $(el).text(textInterval(interval + days, false));
-      }
+      $(el).text(textInterval(interval));
     });
   }
 
@@ -46,8 +39,7 @@ window.addEventListener('load', () => {
     currentCard.ease = result.ease;
     
     currentCardIndex = (currentCardIndex + 1) % cards.length;
-    showCard();
-    updateIntervalDisplay(currentCard.interval);
+     // updateIntervalDisplay(currentCard.interval);
   }
 
   $('#again').on('click', () => {

@@ -1,6 +1,3 @@
-// export const srPromptPrep = () => `
-
-// `;
 
 // TODO: remove Example part. but maybe the student can add an example and then that can be used as the format
 /*
