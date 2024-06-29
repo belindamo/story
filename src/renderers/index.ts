@@ -1,6 +1,6 @@
-import './style.css';
+import '../styles/index.css';
 import $ from 'jquery';
-import { getWikiTitle } from './lib/utils';
+import { getWikiTitle } from '../lib/utils';
 
 let name: string;
 let learningFolder: string;

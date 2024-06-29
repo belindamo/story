@@ -1,8 +1,8 @@
-import './style.css';
-import './review.css'
+import '../styles/index.css';
+import '../styles/review.css';
 import $ from 'jquery';
-import { schedule, ReviewResponse, textInterval } from './lib/scheduler';
-import { DEFAULT_SETTINGS } from './lib/settings';
+import { schedule, ReviewResponse, textInterval } from '../lib/scheduler';
+import { DEFAULT_SETTINGS } from '../lib/settings';
 
 window.addEventListener('load', async () => {
   document.addEventListener('keydown', (event) => {

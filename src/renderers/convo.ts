@@ -1,4 +1,4 @@
-import './style.css';
+import '../styles/index.css';
 
 import {
   Hume,
@@ -10,7 +10,7 @@ import {
   getBrowserSupportedMimeType,
   MimeType,
 } from 'hume';
-import { Thought, ThoughtStream } from './lib/thoughtstream';
+import { Thought, ThoughtStream } from '../lib/thoughtstream';
 
 (async () => {
   const startBtn = document.querySelector<HTMLButtonElement>('button#start-btn');
