@@ -126,7 +126,7 @@ window.addEventListener('load', async () => {
   // ~~~ Upload Section ~~~
   const addSources = (newSources: string[]) => {
     sources = [...new Set([...sources, ...newSources])];
-    if (sources.length > 0) {
+    if (sources) {
       $('#upload-file-paths').html(
         '<ul>' +
           sources.map(source => `<li>${source}</li>`).join('') +

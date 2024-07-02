@@ -305,21 +305,25 @@ app.on('ready', async () => {
         // Read the existing file content
         let fileContent = await fs.promises.readFile(filePath, 'utf-8');
   
-        const sections = fileContent.split(/---[\s\S]*?---/g);
-        console.log('sections', sections)
+        const sources = fileContent.match(/---[\s\S]*?---/g);
+        console.log('sections', sources)
         
-        if (sections.length > 1) {
-          fileContent = sections[0] + '\n\n' + markdown;
+        if (sources && sources.length > 1) {
+          let combinedSources = '';
+          combinedSources = sources.join('\n'); // Join all matched . into a single string
+          fileContent = combinedSources + '\n\n' + markdown;
         } else {
           fileContent = markdown;
         }
+
+        console.log('fileContent', fileContent)
   
         await fs.promises.writeFile(filePath, fileContent);
       } else {
         // If the file does not exist, create it with the new markdown content
         await fs.promises.writeFile(filePath, markdown);
       }
-  
+  g
       return true;
     } catch (error) {
       console.error(error);
