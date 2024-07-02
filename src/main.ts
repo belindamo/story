@@ -261,7 +261,10 @@ app.on('ready', async () => {
     const qaPairs: { question: string, answer: string }[] = [];
     
     // Remove sources 
-    markdown = markdown.replace(/---\s*?\s---\s/s, '');
+    console.log('markdown', markdown);
+    markdown = markdown.replace(/---[\s\S]*?---/g, '');
+    console.log('markdown', markdown);
+
 
     // Regex to match question and answer pairs
     const qaRegex = /([\s\S]+?)\n\?\n([\s\S]+?)(?=\n\n|$)/g;
@@ -302,7 +305,8 @@ app.on('ready', async () => {
         // Read the existing file content
         let fileContent = await fs.promises.readFile(filePath, 'utf-8');
   
-        const sections = fileContent.split(/---\n\s*sources:.*?\n---\n/gs);
+        const sections = fileContent.split(/---[\s\S]*?---/g);
+        console.log('sections', sections)
         
         if (sections.length > 1) {
           fileContent = sections[0] + '\n\n' + markdown;

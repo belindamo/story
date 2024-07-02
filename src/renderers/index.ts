@@ -298,6 +298,9 @@ $("#modify-save").on('click', async () => {
   // TODO: Add a success message
 })
 
+
+$('#modify-back-home').on('click', () => { goToSection('#home-2') });
+
 const textareas: HTMLTextAreaElement[] = [
   document.getElementById('modify-card-question') as HTMLTextAreaElement,
   document.getElementById('modify-card-answer') as HTMLTextAreaElement
