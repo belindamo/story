@@ -167,3 +167,26 @@ input[type="range"]::-moz-range-thumb {
   margin-right: 10px;
   cursor: pointer;
 }
+
+#modify-card {
+  background-color: #fff;
+  padding: 16px;
+  border-radius: 4px;
+  box-shadow: 4px 4px #333;
+  margin: 16px;
+  width: 64vw;
+  max-width: 600px;
+
+  textarea {
+    width: 90%; /* Adjust as needed */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+    overflow: hidden; 
+    resize: none;
+    min-height: 50px; 
+    padding: 10px; /* Adjust as needed */
+    font-size: inherit;
+    cursor: pointer;
+    border: none;
+}
+  
+}

@@ -74,6 +74,8 @@ window.onload = () => {
     saveSources: (sources: string[]) => ipcRenderer.invoke("saveSources", sources),
     getUserInfo: () => ipcRenderer.invoke('getUserInfo'),
     generateMaterials: (sources: string[], notes: string, nCards: number) => ipcRenderer.invoke('generateMaterials', sources, notes, nCards),
+    getQAPairsFromMarkdown: (targetFileNmae: string) => ipcRenderer.invoke('getQAPairsFromMarkdown', targetFileNmae),
+    saveModifiedCards: (targetFile: string, qaPairs: {question: string, answer: string}[]) => ipcRenderer.invoke('saveModifiedCards', targetFile, qaPairs),
     sync: () => ipcRenderer.invoke('sync'),
     
     // convo

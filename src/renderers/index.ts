@@ -10,6 +10,11 @@ let nCards = 8;
 let userNotes: string | null = null;
 let notesFilePath: string | null = null;
 
+//logic for modifying cards
+let currTargetFile: string;
+let currCards: {question: string, answer: string}[] = [];
+let currCardIndex = 0;
+
 /* ~~~~~ MAP ~~~~~ */
 let currSection: string;
 const map = {
@@ -208,6 +213,9 @@ window.addEventListener('load', async () => {
       
       $('#generate-status').text(`flashcard is written at ${filename}`);
       $('#generate-interims').html(`${filename}\n${metadata}\n${qaPairs}`.replace(/\n/g, '<br>'));
+
+      //Update the current target file for modifying cards
+      currTargetFile = filename;
     } catch(e) {
       $('#upload-error').removeClass('hidden');
       console.error(e);
@@ -215,9 +223,104 @@ window.addEventListener('load', async () => {
 
   };
 
-  $('.back-home').on('click', () => { goToSection('#home-2') });
+  $('#back-home').on('click', () => { goToSection('#home-2') });
 
-  $('.add-another-card').on('click', () => { goToSection('#upload') });
+  $('#add-another-deck').on('click', () => { goToSection('#upload') });
+
+
+  $('#go-to-modify').on('click', async () => { 
+    console.log('going to modify');
+    goToSection('#modify')
+    await loadCardForModification();
+  
+  });
+
+  // ~~ Modify Cards Sections ~~
+
+const updateModifiedCard = () => {
+  $('#modify-card-question').val(currCards[currCardIndex].question);
+  $('#modify-card-answer').val(currCards[currCardIndex].answer);
+  $('#modify-card-index').text(`${currCardIndex + 1}/${currCards.length}`);
+
+  // Update textareas heights`
+  textareas.forEach(textarea => {
+    adjustTextareaHeight(textarea);
+  });
+}
+
+const loadCardForModification = async () => {
+  // Read cards from markdown file
+  // @ts-ignore
+  const qaPairs = await window.api.getQAPairsFromMarkdown(currTargetFile);
+  currCards = qaPairs;
+  currCardIndex = 0;
+
+  // Display the first card
+  updateModifiedCard();
+}
+
+$('#modify-next').on('click', async () => {
+  // save current changes before updating index
+  updaterCurrCard()
+
+  currCardIndex++;
+  if (currCardIndex >= currCards.length) {
+    currCardIndex = 0;
+  }
+  updateModifiedCard();
+});
+
+$('#modify-prev').on('click', async () => {
+  // save current changes before updating index
+  updaterCurrCard()
+
+  currCardIndex--;
+  if (currCardIndex < 0) {
+    currCardIndex = currCards.length - 1;
+  }
+  updateModifiedCard();
+});
+
+$("#modify-delete").on('click', async () => {
+  currCards.splice(currCardIndex, 1);
+  if (currCardIndex >= currCards.length) {
+    currCardIndex = currCards.length - 1;
+  }
+  updateModifiedCard();
+})
+
+$("#modify-save").on('click', async () => {
+  updaterCurrCard(); // update current changes before saving
+
+  // @ts-ignore
+  const status: Boolean = await window.api.saveModifiedCards(currTargetFile, currCards);
+
+  // TODO: Add a success message
+})
+
+const textareas: HTMLTextAreaElement[] = [
+  document.getElementById('modify-card-question') as HTMLTextAreaElement,
+  document.getElementById('modify-card-answer') as HTMLTextAreaElement
+];
+
+function adjustTextareaHeight(textarea: HTMLTextAreaElement): void {
+  textarea.style.height = 'auto';
+  textarea.style.height = `${textarea.scrollHeight}px`;
+};
+
+function updaterCurrCard() {
+  currCards[currCardIndex].question = $('#modify-card-question').val() as string;
+  currCards[currCardIndex].answer = $('#modify-card-answer').val() as string;
+}
+
+// textarea height should be adjusted automatically based on content length
+textareas.forEach(textarea => {
+  textarea.addEventListener('input', () => {
+      adjustTextareaHeight(textarea);
+  });
+
+  adjustTextareaHeight(textarea);
+});
 
 
 

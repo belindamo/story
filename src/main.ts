@@ -189,6 +189,7 @@ app.on('ready', async () => {
   }
 
   ipcMain.handle('generateMaterials', async (event, sources: string[], notes: string, nCards: number) => {
+    // TODO: Athena - break down into separate functions 
     try {
       let promises: Promise<string>[] = [];
       sources.forEach((source) => {
@@ -246,6 +247,7 @@ app.on('ready', async () => {
       console.log('targetfilename', targetFilename)
       console.log('meow', flashcardPath + '/' + targetFilename)
       
+      // file written here 
       await fs.promises.writeFile(flashcardPath + '/' + targetFilename, metadata + qaPairs)
       return { filename: targetFilename, metadata, qaPairs };
        
@@ -253,6 +255,72 @@ app.on('ready', async () => {
       console.error(e);
     }
 
+  });
+
+  const parseMarkdownToQAPairs = (markdown: string) => {
+    const qaPairs: { question: string, answer: string }[] = [];
+    
+    // Remove sources 
+    markdown = markdown.replace(/---\s*?\s---\s/s, '');
+
+    // Regex to match question and answer pairs
+    const qaRegex = /([\s\S]+?)\n\?\n([\s\S]+?)(?=\n\n|$)/g;
+    let match;
+  
+    while ((match = qaRegex.exec(markdown)) !== null) {
+      const question = match[1].trim();
+      const answer = match[2].trim();
+      qaPairs.push({ question, answer });
+    }
+  
+    return qaPairs;
+  }
+
+  ipcMain.handle('getQAPairsFromMarkdown', async (event, targetFilename: string) => {
+    try {
+      const filePath = path.join(getLearningPath(), 'flashcards', targetFilename);
+      const content = await fs.promises.readFile(filePath, 'utf-8');
+      const qaPairs = parseMarkdownToQAPairs(content);
+      return qaPairs;
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
+  });
+
+  ipcMain.handle('saveModifiedCards', async (event, targetFilename: string, qaPairs: { question: string, answer: string }[]) => {
+    try {
+      const filePath = path.join(getLearningPath(), 'flashcards', targetFilename);
+      let markdown = '';
+  
+      // Construct the new markdown content from the QA pairs
+      qaPairs.forEach(({ question, answer }) => {
+        markdown += `${question}\n?\n${answer}\n\n`;
+      });
+  
+      if (fs.existsSync(filePath)) {
+        // Read the existing file content
+        let fileContent = await fs.promises.readFile(filePath, 'utf-8');
+  
+        const sections = fileContent.split(/---\n\s*sources:.*?\n---\n/gs);
+        
+        if (sections.length > 1) {
+          fileContent = sections[0] + '\n\n' + markdown;
+        } else {
+          fileContent = markdown;
+        }
+  
+        await fs.promises.writeFile(filePath, fileContent);
+      } else {
+        // If the file does not exist, create it with the new markdown content
+        await fs.promises.writeFile(filePath, markdown);
+      }
+  
+      return true;
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
   });
 
   ipcMain.handle('sync', (cards) => {

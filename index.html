@@ -127,10 +127,32 @@
         <p id="generate-status"></p>
         <p id="generate-interims"></p>
         <p>
-          <button class='back-home'>back home</button>
-          <button class="add-another-card">keep going</button>
+          <button id='back-home'>back home</button>
+          <button id="add-another-deck">keep going</button>
+          <button id="go-to-modify">modify cards</button>
         </p>
       </div>
+
+      <!-- MODIFY CARDS  -->
+       <div id="modify" class="section hidden">
+          <div id="modify-card">
+            <p>Question</p>
+            <textarea id="modify-card-question"></textarea>
+            <p>Answer</p>
+            <textarea id="modify-card-answer"></textarea>
+          </div>
+          <p id="modify-card-index"></p>
+          <div id="modify-buttons">
+            <div id="modify-buttons-control">
+              <button id="modify-prev">previous</button>
+              <!-- <button id="modify-card-edit">edit</button> -->
+              <button id="modify-next">next</button>
+              <button id="modify-delete">delete</button>
+            </div>
+            <button id="modify-save">save</button>
+            <button id="add-another-deck">new deck</button>
+          </div>
+       </div>
 
     </main>
     <script type="module" src="src/components/footer.ts"></script>
