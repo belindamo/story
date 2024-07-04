@@ -204,8 +204,9 @@ app.on('ready', async () => {
 
       let targetFilename = '';
       if (sources.length === 1) {
-        if (getWikiData(sources[0])) {
-          targetFilename = getWikiTitle(sources[0]) + '.md';
+        const wikiTitle = getWikiTitle(sources[0]);
+        if (wikiTitle) {
+          targetFilename = wikiTitle + '.md';
         } else {
           targetFilename = getPathInfo(sources[0]).filename + '.md';
         }
@@ -241,6 +242,7 @@ app.on('ready', async () => {
         ${qaPairs}
         ---
         `);
+        console.log('hmmmm', targetFilename);
         targetFilename = targetFilename.trim().replace(/^[*_'\-"`?]+|[*_'\-"`?]+$/g, '');
       }
       const metadata = getMetadata(sources);
