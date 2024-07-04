@@ -68,11 +68,8 @@ input[type="text"] {
   padding: 8px;
 }
 
-input:focus {
-  outline: none; /* remove the default focus outline */
-}
-
 .section textarea:focus, input[type="text"]:focus {
+  outline: none; /* remove the default focus outline */
   box-shadow: 2px 2px #333;
 }
 
