@@ -42,12 +42,16 @@ a {
   display: none;
 }
 
-.section h1 {
+h1 {
   margin: 0;
 }
 
+a:focus {
+  outline: none;
+  font-weight: bold;
+}
 
-.section textarea, input[type="text"] {
+textarea, input[type="text"] {
   background: repeating-linear-gradient(to bottom, transparent, transparent 1px, white 1px, white 3px), repeating-linear-gradient(to right, #ccc, #ccc 1px, white 1px, white 3px);
   margin: 24px;
   font: inherit;
@@ -60,7 +64,7 @@ a {
   max-width: 512px;
 }
 
-.section textarea {
+textarea {
   padding: 16px 16px 8px;
 }
 
@@ -68,16 +72,16 @@ input[type="text"] {
   padding: 8px;
 }
 
-.section textarea:focus, input[type="text"]:focus {
+textarea:focus, input[type="text"]:focus {
   outline: none; /* remove the default focus outline */
   box-shadow: 2px 2px #333;
 }
 
-.section textarea:hover, input[type="text"]:hover {
+textarea:hover, input[type="text"]:hover {
   cursor: text;
 }
 
-.section button, #source-material {
+button, #source-material {
   background: repeating-linear-gradient(to bottom, transparent, transparent 1px, white 1px, white 3px), repeating-linear-gradient(to right, #ccc, #ccc 1px, white 1px, white 3px);
   margin: 16px;
   padding: 8px 16px;
@@ -90,14 +94,15 @@ input[type="text"] {
   position: relative; /* Add relative positioning */
 }
 
-.section button:hover,
-.section button:focus {
+button:hover,
+button:focus {
+  outline: none; /* remove the default focus outline */
   box-shadow: 2px 2px #333;
   transform: translate(2px, 2px);
 }
 
 /* Add a pseudo-element to maintain the button's original space */
-.section button::after {
+button::after {
   content: '';
   position: absolute;
   top: 0;

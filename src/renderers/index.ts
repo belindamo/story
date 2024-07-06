@@ -97,8 +97,7 @@ window.addEventListener('load', async () => {
         e.preventDefault();
       }
     } else if (e.metaKey && key === 'Enter' && currSection==='#generate') {
-      goToSection(map['#generate']);
-      await handleCardModification();
+      goToModify();
     } else if (currSection === '#modify') {
       if (e.metaKey) {
         if (key === 'ArrowLeft') {
@@ -271,13 +270,19 @@ window.addEventListener('load', async () => {
     window.api.reload();
   });
 
+  
   const handleCardModification = async () => {
     if (!isGenerating) {
       await loadCardForModification();
     }
-  }
+  };
+  
+  const goToModify = async () => {
+    goToSection(map['#generate']);
+    await handleCardModification();
+  };
 
-  $('#go-to-modify').on('click', handleCardModification);
+  $('#go-to-modify').on('click', goToModify);
 
   // ~~ Modify Cards Sections ~~
 
@@ -364,15 +369,13 @@ const handleModifyDone = async () => {
   await window.api.reload();
 };
 
-const handleModifyNew = async () => {
+const handleModifyNew = () => {
   currCards.push({question: '', answer: ''});
   currCardIndex = currCards.length - 1;
   updateModifiedCard();
 };
 
-
 const handleModifyBack = goBack;
-
 
 const handleModifyGen = async () => {
 
