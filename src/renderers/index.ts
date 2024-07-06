@@ -1,6 +1,6 @@
 import '../styles/index.css';
 import $ from 'jquery';
-import { getWikiTitle } from '../lib/utils';
+import { getWikiTitle, debounce } from '../lib/utils';
 
 let name: string;
 let learningFolder: string;
@@ -9,8 +9,9 @@ let nCards = 8;
 
 let userNotes: string | null = null;
 let notesFilePath: string | null = null;
+let isGenerating = false; 
 
-//logic for modifying cards
+// logic for modifying cards
 let currTargetFile: string;
 let currCards: {question: string, answer: string}[] = [];
 let currCardIndex = 0;
@@ -22,7 +23,8 @@ const map = {
   '#save-folder': '#upload',
   '#home-2': '#upload',
   '#upload': '#notes',
-  '#notes': '#generate'
+  '#notes': '#generate',
+  '#generate': '#modify'
 };
 let paths: string[] = [];
 let pathI = -1;
@@ -62,42 +64,74 @@ window.addEventListener('load', async () => {
   if (userInfo.learningPath) learningFolder = userInfo.learningPath;
 
   // ~~~ Keyboard shortcuts ~~~
-  window.addEventListener('keydown', async (e) => {
+  const handleKeydown = async (e) => {
+    const startSection = currSection;
     const key = e.key;
     console.log(`"${key}"`)
     
     if (key === 'Enter' && currSection==='#home-2') {
       goToSection(map['#home-2']);
-    }
+    } else if (currSection === '#upload') {
+      if (key === 'v' && e.metaKey && !$('#wiki-url').is(':focus')) pasteWikiUrl();
+      else if (key === 'Enter') {
+        if (e.metaKey) {
+          handleUploadNext();
+        } else {
+          if ($('#wiki-url').is(':focus')) {
+            const wikiUrl =  $('#wiki-url').val() as string;
+            if (getWikiTitle(wikiUrl)) {
+              addSources([wikiUrl]);
+              $('#wiki-url').val('');
+            } 
+          } else {
+            await handleUploadFiles();
+          }
+        }
+      }
+    } else if (key==='Enter' && currSection==='#notes') {
+      if (e.metaKey) {
+        goToSection(map['#notes']);
+        await loadGenerate();
+      } else if (!$('#notes-prompt').is(':focus')) {
+        $('#notes-prompt').trigger('focus');
+        e.preventDefault();
+      }
+    } else if (e.metaKey && key === 'Enter' && currSection==='#generate') {
+      goToSection(map['#generate']);
+      await handleCardModification();
+    } else if (currSection === '#modify') {
+      if (e.metaKey) {
+        if (key === 'ArrowLeft') {
+          if (e.shiftKey) {
+            handleModifyBack();
+          } else {
+            handleModifyPrev();
+          }
+        }
+        else if (key === 'ArrowRight') handleModifyNext();
+        else if (key === 'ArrowDown') handleModifyDelete();
+        else if (key === 's') handleModifySave();
+        else if (key === 'Enter') handleModifyDone();
+        else if (key === 'n') handleModifyNew();
+        else if (key === 'k') handleModifyGen();
+        else if  (key === 'K') handleModifyGenChildren();
+        
+      } else if (key === 'Enter' && !$('#modify-card-question').is(':focus') && !$('#modify-card-answer').is(':focus')) {
+        $('#modify-card-question').trigger('focus');
+      }
 
-    if (currSection==='#upload') {
-      // if (key === 'v' && e.metaKey && !$('#wiki-url').is(':focus')) pasteWikiUrl();
-      // if (key === 'Enter') {
-      //   wikiUrl =  $('#wiki-url').val() as string;
-      //   if (getWikiTitle(wikiUrl) || !wikiUrl) {
-      //     addSources([wikiUrl]);
-      //     if (e.metaKey) {
-      //       goToSection(map['#upload']);
-      //     }
-      //   } else {
-      //     $('#upload-error').text('Please share a valid wiki link').removeClass('hidden');
-      //   }
+    } 
 
-      // }
+    if (startSection !== '#modify') {
+      if (key==='ArrowLeft' && e.metaKey) {
+        goBack();
+      } else if (key==='ArrowRight' && e.metaKey) {
+        goForward();
+      }
     }
-
-    if (key==='Enter' && currSection==='#notes') {
-      goToSection(map['#notes']);
-      loadGenerate();
-    }
-
-    if (key==='ArrowLeft' && e.metaKey) {
-      goBack();
-    }
-    if (key==='ArrowRight' && e.metaKey) {
-      goForward();
-    }
-  });
+    
+  }
+  window.addEventListener('keydown', debounce(handleKeydown, 15));
 
   // ~~~ Navigate to Home or Home 2 ~~~
   if (userInfo.name && userInfo.learningPath) {
@@ -135,27 +169,29 @@ window.addEventListener('load', async () => {
     }
   }
 
-  const submitMaterials = async () => {
+  const handleUploadNext = async () => {
     // @ts-ignore
     const status = await window.api.saveSources(sources);
     if (status !== 'success') throw Error(status);
     const wikiUrl = $('#wiki-url').val() as string;
-    if (wikiUrl && getWikiTitle(wikiUrl)) sources.push(wikiUrl);
+    if (getWikiTitle(wikiUrl)) addSources([wikiUrl]);
     goToSection(map['#upload']);
   }
 
-  // Add local files
-  $('#upload-files').on('click', async () => {
+  const handleUploadFiles = async () => {
     // @ts-ignore
     const filePaths = await window.api.openFiles();
     if (filePaths) {
       addSources(filePaths);
       $('#upload-next').removeClass("hidden");
     }
-  })
+  }
+
+  // Add local files
+  $('#upload-files').on('click', handleUploadFiles);
 
   // Upload file
-  $('#upload-next').on('click', submitMaterials);
+  $('#upload-next').on('click', handleUploadNext);
 
   const pasteWikiUrl = async () => {
     const txt = await navigator.clipboard.readText();
@@ -176,7 +212,7 @@ window.addEventListener('load', async () => {
 
   // Update number of cards when slider is released
   $('#n-cards').on('change', function() {
-    const nCards = $(this).val() as number;
+    nCards = $(this).val() as number;
   });
 
   $('#notes-prompt').on('change', function() {
@@ -193,7 +229,7 @@ window.addEventListener('load', async () => {
 
   const loadGenerate = async () => {
     try {
-      let flashcardPath;
+      isGenerating = true;
       let animationInterval = setInterval(() => {
         const dots = $('#generate-header').text().split('.').length;
         if (dots > 3 || dots === 0) {
@@ -209,31 +245,39 @@ window.addEventListener('load', async () => {
       const { filename, metadata, qaPairs } = await window.api.generateMaterials(sources, userNotes, nCards);
       
       clearInterval(animationInterval);
-      $('#generate-header').text('done!');
-      
-      $('#generate-status').text(`flashcard is written at ${filename}`);
-      $('#generate-interims').html(`${filename}\n${metadata}\n${qaPairs}`.replace(/\n/g, '<br>'));
+      if (filename) { // generateMaterials returns empty object
+        $('#generate-header').text('done!');
+        
+        $('#generate-status').text(`flashcard is written at ${filename}`);
+        $('#generate-interims').html(`${filename}\n${metadata}\n${qaPairs}`.replace(/\n/g, '<br>'));
+        
+        // Update the current target file for modifying cards
+        currTargetFile = filename;
+        isGenerating = false;
+      } else {
+        throw Error('Error generating materials');
+      }
 
-      //Update the current target file for modifying cards
-      currTargetFile = filename;
     } catch(e) {
-      $('#upload-error').removeClass('hidden');
+      $('#generate-header').text('oops, looks like something went wrong! check your inputs / internet connection, or message belinda');
+      $('#generate-status').text('');
       console.error(e);
     }
 
   };
 
-  $('#back-home').on('click', () => { goToSection('#home-2') });
-
-  $('#add-another-deck').on('click', () => { goToSection('#upload') });
-
-
-  $('#go-to-modify').on('click', async () => { 
-    console.log('going to modify');
-    goToSection('#modify')
-    await loadCardForModification();
-  
+  $('#back-home').on('click', () => { 
+    // @ts-ignore
+    window.api.reload();
   });
+
+  const handleCardModification = async () => {
+    if (!isGenerating) {
+      await loadCardForModification();
+    }
+  }
+
+  $('#go-to-modify').on('click', handleCardModification);
 
   // ~~ Modify Cards Sections ~~
 
@@ -259,18 +303,18 @@ const loadCardForModification = async () => {
   updateModifiedCard();
 }
 
-$('#modify-next').on('click', async () => {
+const handleModifyNext = async () => {
   // save current changes before updating index
-  updaterCurrCard()
-
+  updaterCurrCard();
+  
   currCardIndex++;
   if (currCardIndex >= currCards.length) {
     currCardIndex = 0;
   }
   updateModifiedCard();
-});
+}
 
-$('#modify-prev').on('click', async () => {
+const handleModifyPrev = async () => {
   // save current changes before updating index
   updaterCurrCard()
 
@@ -279,37 +323,87 @@ $('#modify-prev').on('click', async () => {
     currCardIndex = currCards.length - 1;
   }
   updateModifiedCard();
-});
+}
 
-$("#modify-delete").on('click', async () => {
-  currCards.splice(currCardIndex, 1);
-  if (currCardIndex >= currCards.length) {
-    currCardIndex = currCards.length - 1;
+const handleModifyDelete = async () => {
+  if (currCards.length > 1) {
+    currCards.splice(currCardIndex, 1);
+    if (currCardIndex >= currCards.length) {
+      currCardIndex = currCards.length - 1;
+    } 
+    updateModifiedCard();
+  } else {
+    currCards = [];
+    handleModifyNew();
   }
-  updateModifiedCard();
-})
+};
 
-$("#modify-save").on('click', async () => {
+const handleModifySave = async () => {
   updaterCurrCard(); // update current changes before saving
 
   // @ts-ignore
   const status: Boolean = await window.api.saveModifiedCards(currTargetFile, currCards);
 
-  // TODO: Add a success message
-})
+  // Save the original button text
+  const originalText = $("#modify-save-span").text();
+          
+  // Change the button text to "saved"
+  $("#modify-save-span").text("saved");
+  
+  // Set a timeout to change the button text back after 5 seconds
+  setTimeout(() => {
+    $("#modify-save-span").text(originalText);
+  }, 1500);
+  
+};
+
+const handleModifyDone = async () => {
+  // @ts-ignore
+  await window.api.saveModifiedCards(currTargetFile, currCards)
+  // @ts-ignore
+  await window.api.reload();
+};
+
+const handleModifyNew = async () => {
+  currCards.push({question: '', answer: ''});
+  currCardIndex = currCards.length - 1;
+  updateModifiedCard();
+};
 
 
-$('#modify-back-home').on('click', () => { goToSection('#home-2') });
+const handleModifyBack = goBack;
+
+
+const handleModifyGen = async () => {
+
+};
+
+const handleModifyGenChildren = async () => {
+
+};
+
+$('#modify-next').on('click', handleModifyNext);
+$('#modify-prev').on('click', handleModifyPrev);
+$("#modify-delete").on('click', handleModifyDelete);
+$("#modify-save").on('click', handleModifySave);
+$("#modify-done").on('click', handleModifyDone);
+$("#modify-new").on('click', handleModifyNew);
+$("#modify-back").on('click', handleModifyBack);
+
+$("#modify-generate").on('click', handleModifyGen);
+$("#modify-children").on('click', handleModifyGenChildren);
+
 
 const textareas: HTMLTextAreaElement[] = [
   document.getElementById('modify-card-question') as HTMLTextAreaElement,
-  document.getElementById('modify-card-answer') as HTMLTextAreaElement
+  document.getElementById('modify-card-answer') as HTMLTextAreaElement,
+  document.getElementById('notes-prompt')  as HTMLTextAreaElement
 ];
 
 function adjustTextareaHeight(textarea: HTMLTextAreaElement): void {
   textarea.style.height = 'auto';
-  textarea.style.height = `${textarea.scrollHeight}px`;
-};
+  textarea.style.height = `${Math.max(64, textarea.scrollHeight)}px`;
+}
 
 function updaterCurrCard() {
   currCards[currCardIndex].question = $('#modify-card-question').val() as string;

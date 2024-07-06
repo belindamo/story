@@ -5,8 +5,8 @@ const footer = `
   <a target="_blank" href="https://buymeacoffee.com/belindamo">cafe</a>
   ·
   <a id="update-folder" href="#">update folder path</a>
-  ·
-  <a href="convo.html">convo</a>
+  <!-- · -->
+  <!-- <a href="convo.html">convo</a> -->
   <!-- · -->
   <!-- <a href="review.html">review</a> -->
   <!-- <a href="swipe.html">swipe</a> -->

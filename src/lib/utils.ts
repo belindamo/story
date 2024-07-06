@@ -3,11 +3,14 @@ import axios from 'axios';
 export const getPathInfo = (path: string) => {
     try {
         const pathParts = path.split(/[/\\]/);
-        const filename = pathParts.pop();
+        const filenameWithExt = pathParts.pop();
+        const filename = filenameWithExt.split('.').slice(0, -1).join('.');
+        const extension = filenameWithExt.split('.').pop();
         return {
             parts: pathParts,
             filename: filename,
-            folder: path.substring(0, path.lastIndexOf(filename))
+            extension: extension,
+            folder: path.substring(0, path.lastIndexOf(filenameWithExt))
         };
     } catch(e) {
         return null;
@@ -72,3 +75,25 @@ sources: [ ${sources.join(', ')} ]
 
 `;
 
+export const debounce = (func: Function, wait: number, immediate = true) => {
+    let timeout: any;
+  
+    return function (...args: any[]) {
+      return new Promise((resolve, reject) => {
+        const later = () => {
+          timeout = null;
+          if (!immediate) {
+            func.apply(this, args).then(resolve).catch(reject);
+          }
+        };
+  
+        const callNow = immediate && !timeout;
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+  
+        if (callNow) {
+          func.apply(this, args).then(resolve).catch(reject);
+        }
+      });
+    };
+  };

@@ -74,13 +74,13 @@
       
       <!-- UPLOAD -->
       <div id="upload" class="section hidden">
-        <h2 id="upload-header">please upload a file with information that you'd like to remember for the long-term (1+ years)</h2>
+        <h2 id="upload-header">please upload information that you'd like to remember for the long-term (1+ years)</h2>
         <p id="upload-text">important: choose a resource that you feel is reputable and aligned with your values, since its concepts will stick to your brain</p>
         <div id="upload-file-paths"></div>
         <p>
           <!-- your pdf, md, txt, or doc:  -->
-          <button id="upload-files">add your .pdf, .md, .txt, or .doc</button>
-          <p>or <i class="shortcut" id="paste">⌘ v</i> a wikipedia url:</p>
+          <button id="upload-files"><i class="shortcut">↵</i>add your .pdf, .md, .txt, or .doc</button>
+          <p>or <i class="shortcut" id="paste">⌘ v</i> a valid wikipedia url:</p>
           <div style="display: flex;">
             <input id='wiki-url' type="text" placeholder="https://en.wikipedia.org/wiki/Earth" />
           </div>
@@ -96,15 +96,15 @@
         <!-- why is this material interesting to you? -->
         <p>
           <!-- your pdf, md, txt, or doc:  -->
-          <textarea id="notes-prompt" placeholder="describe"></textarea>
+          <textarea id="notes-prompt" placeholder="describe"> </textarea>
           <div>
-            <p>Number of flashcards (vibe it out):</p>
-            <input type="range" id="n-cards" min="1" max="48" value="8">
+            <p>Number of flashcards (1-48):</p>
+            <input type="range" id="n-cards" min="1" max="48" value="4">
           <!-- <button id="notes-files">add your .pdf, .md, .txt, or .doc context files</button> -->
           <!-- <p id="notes-file-paths"></p> -->
           </div>
         </p>
-        <button id="notes-next"><i class="shortcut">↵</i>next</button>
+        <button id="notes-next"><i class="shortcut">⌘ ↵</i>next</button>
         <p class="hidden" id="notes-error">Please upload a valid file</p>
       </div>
 
@@ -127,31 +127,39 @@
         <p id="generate-status"></p>
         <p id="generate-interims"></p>
         <p>
-          <button id='back-home'>back home</button>
-          <button id="add-another-deck">keep going</button>
-          <button id="go-to-modify">modify cards</button>
+          <button id='back-home'>home</a></button>
+          <button id="go-to-modify"><i class="shortcut">⌘ ↵</i>modify cards</button>
         </p>
       </div>
 
       <!-- MODIFY CARDS  -->
        <div id="modify" class="section hidden">
+          <div id="modify-buttons">
+            <div id="modify-buttons-control">
+              <button id="modify-prev"><i class="shortcut">⌘ ←</i>previous</button>
+              <button id="modify-next"><i class="shortcut">⌘ →</i>next</button>
+              <button id="modify-delete"><i class="shortcut">⌘ ↓</i>delete card</button>
+              <button id="modify-add"><i class="shortcut">⌘ n</i>add card</button>
+              <!-- <button id="modify-generate"><i class="shortcut">⌘ k</i>regenerate w/prompt</button> -->
+              <!-- <button id="modify-children"><i class="shortcut">⌘ ⇧ k</i>generate new cards w/prompt</button> -->
+              <br/>
+              <button id="modify-save">
+                <i class="shortcut">⌘ s</i>
+                <span id="modify-save-span">save cards</span>
+              </button>
+              <button id="modify-back"><i class="shortcut">⌘ shift ↵</i>back</button>
+              <button id="modify-done"><i class="shortcut">⌘ ↵</i>done</button>
+              
+            <p>↵ to edit card, shift / tab to switch focus between front and back</p>
+          </div>
           <div id="modify-card">
-            <p>Question</p>
+            <p>Front</p>
             <textarea id="modify-card-question"></textarea>
-            <p>Answer</p>
+            <p>Back</p>
             <textarea id="modify-card-answer"></textarea>
           </div>
           <p id="modify-card-index"></p>
-          <div id="modify-buttons">
-            <div id="modify-buttons-control">
-              <button id="modify-prev">previous</button>
-              <!-- <button id="modify-card-edit">edit</button> -->
-              <button id="modify-next">next</button>
-              <button id="modify-delete">delete</button>
-            </div>
-            <button id="modify-save">save</button>
-            <button id="modify-back-home">back home</button>
-          </div>
+
        </div>
 
     </main>

@@ -1,5 +1,6 @@
 import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron';
 const { updateElectronApp } = require('update-electron-app');
+import log from 'electron-log/main';
 
 import path from 'path';
 import fs from 'fs';
@@ -20,6 +21,8 @@ import {
 import { getWikiTitle, getWikiData, getPathInfo } from './lib/utils';
 import { Thought, ThoughtStream } from './lib/thoughtstream';
 
+log.initialize();
+
 updateElectronApp(); // additional configuration options available
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -38,7 +41,6 @@ const createWindow = () => {
       preload: path.join(__dirname, 'preload.js'),
     },
   });
-  
 
   // this opens all <a> links with target "_blank" in the browser.
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
@@ -46,15 +48,17 @@ const createWindow = () => {
     return { action: 'deny' };
   })
 
-  // and load the index.html of the app.
+  // and load the HTMLs of the app.
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
   } else {
     mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
+    // mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/convo.html`));
+
   }
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.openDevTools();
 
   return mainWindow;
 };
@@ -73,18 +77,18 @@ app.on('ready', async () => {
   let thoughtstream = new ThoughtStream();
 
   const userDataPath = path.join(app.getPath('userData'), 'user_data.json');
-  console.log(userDataPath);
+  log.info(userDataPath);
 
   const saveUserData = (key: string, value: string) => {
     let data;
     if (fs.existsSync(userDataPath)) {
       data = JSON.parse(fs.readFileSync(userDataPath, 'utf-8'));
-      console.log('data', data)
+      log.info('data', data)
     } else {
       data = {};
     }
     data[key] = value;
-    console.log('new data', data)
+    log.info('new data', data)
     fs.writeFileSync(userDataPath, JSON.stringify(data));
   };
 
@@ -95,6 +99,11 @@ app.on('ready', async () => {
     }
     throw Error('Learning path is not in app userData');
   }
+
+  ipcMain.handle('reload', async (event) => {
+    await win.reload();
+    return 'success';
+  })
 
   ipcMain.handle('dialog:openFiles', async (event) => {
     try {
@@ -107,7 +116,7 @@ app.on('ready', async () => {
         return filePaths;
       }
     } catch(e) {
-      console.error(e);
+      log.error(e);
       return null;
     }
   })
@@ -124,7 +133,7 @@ app.on('ready', async () => {
         return filePaths[0];
       }
     } catch(e) {
-      console.error(e);
+      log.error(e);
       return null;
     }
   });
@@ -146,21 +155,19 @@ app.on('ready', async () => {
       let promises: Promise<void>[] = [];
       sources.forEach((source) => {
         if (!(getWikiTitle(source))) {
-          const { folder, filename } = getPathInfo(source);
-          const target = targetFolder + '/' + filename;
+          const { filename, extension } = getPathInfo(source);
+          const target = targetFolder + '/' + filename + '.' + extension;
           promises.push(fs.promises.copyFile(
             source, 
             target,
             fs.constants.COPYFILE_FICLONE, // overwrites source file if it exists
           ));
-        } else {
-          throw Error(`Invalid source filepath: ${source}`);
-        }
+        } 
       })
       await Promise.all(promises);
       return 'success';
     } catch(e) {
-      console.error(e);
+      log.error(e);
       return `error: ${e}`;
     }
   });
@@ -169,7 +176,7 @@ app.on('ready', async () => {
     let data = {};
     if (fs.existsSync(userDataPath)) {
       data = JSON.parse(fs.readFileSync(userDataPath, 'utf-8'));
-      console.log('data', data)
+      log.info('data', data)
     } 
     return data;
   })
@@ -217,15 +224,16 @@ app.on('ready', async () => {
         if (result.status === 'fulfilled') {
           return result.value;
         } else {
-          console.error(`Error processing material: ${result.reason}`);
+          log.error(`Error processing material: ${result.reason}`);
           return '';
         }
       });
 
       const prompt = promptGenerateCards(targetFilename, materialStrings, notes, nCards);
-      // console.log('PROMPT: ', prompt);
+      log.info('PROMPT: ', prompt);
 
       const qaPairs = await sendMessageToGemini(prompt);
+      log.info('QAPAIRS: ', prompt);
 
       const flashcardPath = getLearningPath() + '/flashcards'
       if (!fs.existsSync(flashcardPath)) {
@@ -242,19 +250,18 @@ app.on('ready', async () => {
         ${qaPairs}
         ---
         `);
-        console.log('hmmmm', targetFilename);
+        log.info('hmmmm', targetFilename);
         targetFilename = targetFilename.trim().replace(/^[*_'\-"`?]+|[*_'\-"`?]+$/g, '');
       }
       const metadata = getMetadata(sources);
-      console.log('targetfilename', targetFilename)
-      console.log('meow', flashcardPath + '/' + targetFilename)
-      
+
       // file written here 
       await fs.promises.writeFile(flashcardPath + '/' + targetFilename, metadata + qaPairs)
       return { filename: targetFilename, metadata, qaPairs };
        
     } catch(e) {
-      console.error(e);
+      log.error(e);
+      return {};
     }
 
   });
@@ -263,9 +270,9 @@ app.on('ready', async () => {
     const qaPairs: { question: string, answer: string }[] = [];
     
     // Remove sources 
-    console.log('markdown', markdown);
+    log.info('markdown', markdown);
     markdown = markdown.replace(/---[\s\S]*?---/g, '');
-    console.log('markdown', markdown);
+    log.info('markdown', markdown);
 
 
     // Regex to match question and answer pairs
@@ -288,7 +295,7 @@ app.on('ready', async () => {
       const qaPairs = parseMarkdownToQAPairs(content);
       return qaPairs;
     } catch (error) {
-      console.error(error);
+      log.error(error);
       return null;
     }
   });
@@ -308,7 +315,7 @@ app.on('ready', async () => {
         let fileContent = await fs.promises.readFile(filePath, 'utf-8');
   
         const sources = fileContent.match(/---[\s\S]*?---/g);
-        console.log('sections', sources)
+        log.info('sections', sources)
         
         if (sources && sources.length > 1) {
           let combinedSources = '';
@@ -318,17 +325,16 @@ app.on('ready', async () => {
           fileContent = markdown;
         }
 
-        console.log('fileContent', fileContent)
+        log.info('fileContent', fileContent)
   
         await fs.promises.writeFile(filePath, fileContent);
       } else {
         // If the file does not exist, create it with the new markdown content
         await fs.promises.writeFile(filePath, markdown);
       }
-  g
       return true;
     } catch (error) {
-      console.error(error);
+      log.error(error);
       return false;
     }
   });
@@ -342,11 +348,11 @@ app.on('ready', async () => {
     // const good: RecordLogItem = scheduling_cards[Rating.Good];
     // const newCard: Card = good.card;
 
-    // console.log(card)
-    // console.log(f)
-    // console.log(scheduling_cards)
-    // console.log(good)
-    // console.log(newCard)
+    // log.info(card)
+    // log.info(f)
+    // log.info(scheduling_cards)
+    // log.info(good)
+    // log.info(newCard)
 
     return [
       {
