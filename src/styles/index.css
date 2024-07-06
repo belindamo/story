@@ -47,7 +47,7 @@ a {
 }
 
 
-.section textarea, .input-field {
+.section textarea, input[type="text"] {
   background: repeating-linear-gradient(to bottom, transparent, transparent 1px, white 1px, white 3px), repeating-linear-gradient(to right, #ccc, #ccc 1px, white 1px, white 3px);
   margin: 24px;
   font: inherit;
@@ -64,16 +64,16 @@ a {
   padding: 16px 16px 8px;
 }
 
-.input-field {
+input[type="text"] {
   padding: 8px;
 }
 
-.section textarea:focus, .input-field:focus {
+.section textarea:focus, input[type="text"]:focus {
   outline: none; /* remove the default focus outline */
   box-shadow: 2px 2px #333;
 }
 
-.section textarea:hover, .input-field:hover {
+.section textarea:hover, input[type="text"]:hover {
   cursor: text;
 }
 
@@ -152,7 +152,6 @@ input[type="range"]::-moz-range-thumb {
   height: 24px;
   background: #333;
   cursor: pointer;
-
 }
 
 
@@ -163,4 +162,28 @@ input[type="range"]::-moz-range-thumb {
   border: 1px solid black;
   margin-right: 10px;
   cursor: pointer;
+}
+#modify-card {
+  background-color: #fff;
+  padding: 16px;
+  border-radius: 4px;
+  box-shadow: 1px 1px 2px 2px #333;
+  margin: 0 auto;
+  min-width: 80%;
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  textarea {
+    min-width: 90%;
+    /* max-width: 600px; */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+    overflow: hidden; 
+    resize: vertical;
+    min-height: 64px; 
+    padding: 10px; /* Adjust as needed */
+    font-size: inherit;
+  }
 }

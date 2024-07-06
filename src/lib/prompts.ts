@@ -1,5 +1,3 @@
-import fs from 'fs';
-import path from 'path';
 import p from './prompts/spacedRepetition';
 
 export const promptGenerateCards = (flashcardName: string, materials: string[], userNote: string = null, nCards: number = null) => {
@@ -7,7 +5,7 @@ export const promptGenerateCards = (flashcardName: string, materials: string[], 
 
   prompt = prompt.replaceAll('{{flashcardName}}', flashcardName);
 
-  prompt = prompt.replaceAll('{{material}}', materials.join('---'));
+  prompt = prompt.replaceAll('{{material}}', materials.join());
   
   if (userNote) {
     prompt = prompt.replaceAll('{{userNote}}', userNote);

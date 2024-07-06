@@ -20,8 +20,7 @@ const buildGoogleGenAIPrompt = (messages) => {
   };
 };
 
-// Updated sendMessageToGemini function to actually send the message and return the response
-export const sendMessageToGemini = async (userMessage, onMessagePart) => {
+export const sendMessageToGemini = async (userMessage) => {
   const messages = [
     { role: 'user', content: userMessage },
   ];
@@ -37,14 +36,14 @@ export const sendMessageToGemini = async (userMessage, onMessagePart) => {
       .getGenerativeModel({ model: GEMINI_MODEL}, requestOptions)
       .generateContentStream(prompt);
   
+    let result = '';
     for await (const data of stream) {
-      const textParts = data.candidates.map(candidate => 
+      const chunk = data.candidates.map(candidate => 
         candidate.content && candidate.content.parts ? candidate.content.parts.map(part => part.text).join(' ') : ''
       ).join(' ');
-      
-      // Call the callback with each new message part
-      onMessagePart(textParts);
+      result += chunk;
     }
+    return result;
   } catch (error) {
     console.error('Error:', error);
     throw error; // Rethrow the error to handle it in the calling function

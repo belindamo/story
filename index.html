@@ -40,15 +40,18 @@
           </div>
         </div>
       </div>
+       -->
+
+      <!-- HOME 1 -->
       <div id="home" class="section hidden">
         <h2>learn for the long term</h2>
         <p>
           your name: 
-          <input type="text" id="your-name" />
+          <input id="your-name"/>
         </p>
-      </div> -->
+      </div>
 
-      <!-- HOME 1 -->
+      <!-- HOME 2 -->
       <div id="home-2" class="section hidden">
         <h2 id="home-2-header">it's a good day to learn</h2>
         <p id="home-2-text">your flashcards are stored in your local folder "<span id="home-2-folder-path"></span>"</p>
@@ -71,15 +74,15 @@
       
       <!-- UPLOAD -->
       <div id="upload" class="section hidden">
-        <h2 id="upload-header">please upload a file with information that you'd like to remember for the long-term (1+ years)</h2>
+        <h2 id="upload-header">please upload information that you'd like to remember for the long-term (1+ years)</h2>
         <p id="upload-text">important: choose a resource that you feel is reputable and aligned with your values, since its concepts will stick to your brain</p>
         <div id="upload-file-paths"></div>
         <p>
           <!-- your pdf, md, txt, or doc:  -->
-          <button id="upload-files">add your .pdf, .md, .txt, or .doc</button>
-          <p>or <i class="shortcut" id="paste">⌘ v</i> a wikipedia url:</p>
+          <button id="upload-files"><i class="shortcut">↵</i>add your .pdf, .md, .txt, or .doc</button>
+          <p>or <i class="shortcut" id="paste">⌘ v</i> a valid wikipedia url:</p>
           <div style="display: flex;">
-            <input id='wiki-url' class='input-field' placeholder="https://en.wikipedia.org/wiki/Earth" />
+            <input id='wiki-url' type="text" placeholder="https://en.wikipedia.org/wiki/Earth" />
           </div>
         </p>
         <button id="upload-next"><i class="shortcut">⌘ ↵</i>next</button>
@@ -93,15 +96,15 @@
         <!-- why is this material interesting to you? -->
         <p>
           <!-- your pdf, md, txt, or doc:  -->
-          <textarea id="notes-prompt" placeholder="describe"></textarea>
+          <textarea id="notes-prompt" placeholder="describe"> </textarea>
           <div>
-            <p>Number of flashcards (vibe it out):</p>
-            <input type="range" id="n-cards" min="1" max="48" value="8">
+            <p>Number of flashcards (1-48):</p>
+            <input type="range" id="n-cards" min="1" max="48" value="4">
           <!-- <button id="notes-files">add your .pdf, .md, .txt, or .doc context files</button> -->
           <!-- <p id="notes-file-paths"></p> -->
           </div>
         </p>
-        <button id="notes-next"><i class="shortcut">↵</i>next</button>
+        <button id="notes-next"><i class="shortcut">⌘ ↵</i>next</button>
         <p class="hidden" id="notes-error">Please upload a valid file</p>
       </div>
 
@@ -120,29 +123,47 @@
 
       <!-- GENERATE -->
       <div id="generate" class="section hidden">
-        <h2>spitting bars...</h2>
-        <!-- <h2>generating materials...</h2> -->
-        <p id="generate-status">generating your flashcards!</p>
-        <p id="generate-result"></p>
+        <h2 id="generate-header">spitting bars..</h2>
+        <p id="generate-status"></p>
+        <p id="generate-interims"></p>
         <p>
-          <button class='back-home'>back home</button>
+          <button id='back-home'>home</a></button>
+          <button id="go-to-modify"><i class="shortcut">⌘ ↵</i>modify cards</button>
         </p>
       </div>
 
-      <div id="go-home">
-        <a href="index.html">home</a>
-        ·
-        <a target="_blank" href="https://buymeacoffee.com/belindamo">cafe</a>
-        ·
-        <a id="update-folder" href="#">update folder path</a>
-        ·
-        <a href="convo.html">convo</a>
-        <!-- · -->
-        <!-- <a href="review.html">review</a> -->
-        <!-- <a href="swipe.html">swipe</a> -->
-        <!-- <a target="_blank" href="town.html">town</a> -->
-      </div>
+      <!-- MODIFY CARDS  -->
+       <div id="modify" class="section hidden">
+          <div id="modify-buttons">
+            <div id="modify-buttons-control">
+              <button id="modify-prev"><i class="shortcut">⌘ ←</i>previous</button>
+              <button id="modify-next"><i class="shortcut">⌘ →</i>next</button>
+              <button id="modify-delete"><i class="shortcut">⌘ ↓</i>delete card</button>
+              <button id="modify-add"><i class="shortcut">⌘ n</i>add card</button>
+              <!-- <button id="modify-generate"><i class="shortcut">⌘ k</i>regenerate w/prompt</button> -->
+              <!-- <button id="modify-children"><i class="shortcut">⌘ ⇧ k</i>generate new cards w/prompt</button> -->
+              <br/>
+              <button id="modify-save">
+                <i class="shortcut">⌘ s</i>
+                <span id="modify-save-span">save cards</span>
+              </button>
+              <button id="modify-back"><i class="shortcut">⌘ shift ↵</i>back</button>
+              <button id="modify-done"><i class="shortcut">⌘ ↵</i>done</button>
+              
+            <p>↵ to edit card, shift / tab to switch focus between front and back</p>
+          </div>
+          <div id="modify-card">
+            <p>Front</p>
+            <textarea id="modify-card-question"></textarea>
+            <p>Back</p>
+            <textarea id="modify-card-answer"></textarea>
+          </div>
+          <p id="modify-card-index"></p>
+
+       </div>
+
     </main>
-    <script type="module" src="/src/renderer-index.ts"></script>
+    <script type="module" src="src/components/footer.ts"></script>
+    <script type="module" src="/src/renderers/index.ts"></script>
   </body>
   </html>

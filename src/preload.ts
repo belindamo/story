@@ -3,66 +3,11 @@
 const { contextBridge, ipcRenderer } = require('electron');
 import { Thought } from './lib/thoughtstream';
 
-const preloadAssets = () => {
-  // Image assets
-  const imgChar1 = "./src/assets/clampy_sprites.png";
-  
-  const imageSrcs: string[] = [
-    imgChar1
-  ];
-  let imagesAreLoaded = false;
-  
-  // Sound assets
-  const snd1 = "./src/assets/typing.mp3";
-  const soundSrcs: string[] = [snd1];
-  let soundsAreLoaded = false;
-  
-  /*~~ Preload assets ~~*/
-  let preloadedImages: { [key: string]: HTMLImageElement } = {};
-  let preloadedSounds = {};
-  
-  let imagesLoaded = 0;
-  const totalImages = imageSrcs.length;
-  imageSrcs.forEach((imgUrl) => {
-    var img = new Image();
-    img.src = imgUrl;
-    
-    img.onload = (e) => {
-      imagesLoaded++;
-      preloadedImages[imgUrl] = img;
-      if (imagesLoaded === totalImages) {
-        imagesAreLoaded = true;
-        if (imagesAreLoaded && soundsAreLoaded) {
-          contextBridge.exposeInMainWorld('assets', { images: preloadedImages, sounds: preloadedSounds })
-        }
-      }
-    };
-  });
-  
-  let soundsLoaded = 0;
-  const totalSounds = soundSrcs.length;
-  soundSrcs.forEach((filename) => {
-    var audio = new Audio(filename);
-  
-    audio.addEventListener("canplaythrough", () => {
-      soundsLoaded++;
-      if (soundsLoaded === totalSounds) {
-        soundsAreLoaded = true;
-        if (imagesAreLoaded && soundsAreLoaded) {
-          contextBridge.exposeInMainWorld('assets', { images: preloadedImages, sounds: preloadedSounds })
-        }
-      }
-    });
-  });
-
-
-}  
-
 window.onload = () => {
-  preloadAssets();
 
   contextBridge.exposeInMainWorld('api', {
-    // renderer-index
+    reload: () => ipcRenderer.invoke('reload'),
+    // index
     saveName: (name: string) => {
       ipcRenderer.send('saveName', name);
     },
@@ -73,12 +18,12 @@ window.onload = () => {
     openFiles: () => ipcRenderer.invoke('dialog:openFiles'),
     saveSources: (sources: string[]) => ipcRenderer.invoke("saveSources", sources),
     getUserInfo: () => ipcRenderer.invoke('getUserInfo'),
-    generateMaterials: (sources: string[], notes: string, nCards: number) => {
-      ipcRenderer.invoke('generateMaterials', sources, notes, nCards);
-    },
+    generateMaterials: (sources: string[], notes: string, nCards: number) => ipcRenderer.invoke('generateMaterials', sources, notes, nCards),
+    getQAPairsFromMarkdown: (targetFileName: string) => ipcRenderer.invoke('getQAPairsFromMarkdown', targetFileName),
+    saveModifiedCards: (targetFile: string, qaPairs: {question: string, answer: string}[]) => ipcRenderer.invoke('saveModifiedCards', targetFile, qaPairs),
     sync: () => ipcRenderer.invoke('sync'),
     
-    // renderer-convo
+    // convo
     addThought: (t: Thought) => {
       ipcRenderer.invoke('addThought', t);
     }
