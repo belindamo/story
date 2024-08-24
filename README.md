@@ -1,4 +1,4 @@
-# your story
+# your story - a local-first flashcard generator
 
 - install: `npm install`
 - run: `npm start`
